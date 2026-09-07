@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Select</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Librerías externas para lectura de CSV y Gráficos -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       --bg-main: #0a0e17;
@@ -22,35 +25,35 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: var(--bg-main); color: var(--text-main); padding: 16px; min-height: 100vh; }
 
-    /* Topbar */
+    /* Encabezado Principal */
     .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 14px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; }
     .brand-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); letter-spacing: 0.02em; }
     .brand-sub { font-size: 0.75rem; color: var(--text-muted); }
 
-    /* Modos: Mes en Curso / Histórico */
+    /* Botones de Cambio de Vista */
     .view-selector { display: flex; gap: 8px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
-    .view-btn { border: none; background: transparent; color: var(--text-muted); padding: 6px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+    .view-btn { border: none; background: transparent; color: var(--text-muted); padding: 6px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
     .view-btn.active { background: var(--accent-amber); color: #fff; }
 
-    /* Filtros y Selector de Mes Histórico */
+    /* Barra de Filtros y Selección de Histórico */
     .filter-bar { background: var(--bg-card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-    .select-month { background: #0a0e17; color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; }
+    .select-month { background: #0a0e17; color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; outline: none; cursor: pointer; }
 
-    /* Grilla de Pastillas */
+    /* Grilla de Pastillas Métricas (Misma medida) */
     .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
     .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; height: 110px; border-top: 3px solid var(--accent-amber); }
     .kpi-title { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-    .kpi-value { font-size: 1.35rem; font-weight: 800; color: #fff; margin: 4px 0; }
+    .kpi-value { font-size: 1.25rem; font-weight: 800; color: #fff; margin: 4px 0; }
     .kpi-details { font-size: 0.7rem; color: var(--text-muted); display: flex; justify-content: space-between; }
 
-    /* Layout Gráficos y Ranking */
+    /* Estructura para Gráfico y Ranking */
     .dashboard-body { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
     .panel-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
     .panel-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    /* Ranking Item */
-    .ranking-list { display: flex; flex-direction: column; gap: 10px; }
-    .ranking-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; padding-bottom: 6px; border-bottom: 1px solid #1a2333; }
+    /* Lista de Ranking */
+    .ranking-list { display: flex; flex-direction: flex-column; gap: 10px; max-height: 250px; overflow-y: auto; }
+    .ranking-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; padding: 6px 0; border-bottom: 1px solid #1a2333; }
     .ranking-name { font-weight: 600; color: var(--text-main); }
     .ranking-val { font-weight: 700; color: var(--accent-gold); }
 
@@ -60,7 +63,7 @@
 </head>
 <body>
 
-  <!-- Encabezado Exclusivo Select -->
+  <!-- Header Exclusivo Select -->
   <div class="top-bar">
     <div>
       <div class="brand-title">DASHBOARD - SELECT</div>
@@ -73,29 +76,29 @@
     </div>
   </div>
 
-  <!-- Barra de Filtros / Selector de Período -->
+  <!-- Controles y Período -->
   <div class="filter-bar">
-    <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted);" id="label-periodo">Mostrando: Septiembre 2026 (En Curso)</span>
-    <select id="select-mes-historico" class="select-month" style="display:none;" onchange="filtrarPorMesHistorico()">
-      <!-- Meses cerrados generados automáticamente -->
+    <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted);" id="label-periodo">Cargando datos...</span>
+    <select id="select-mes-historico" class="select-month" style="display:none;" onchange="procesarDashboard()">
+      <!-- Se autocompleta con los meses cargados en la hoja -->
     </select>
   </div>
 
-  <!-- Pastillas Métricas de Visualización Rápidas -->
+  <!-- Pastillas Métricas -->
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-title">Venta Total Mes</div>
       <div class="kpi-value" id="kpi-vta-acum">$0</div>
       <div class="kpi-details">
         <span>Proy: <strong id="kpi-vta-proy" style="color:#fff;">$0</strong></span>
-        <span>Prom: <strong id="kpi-vta-prom" style="color:#fff;">$0/día</strong></span>
+        <span>Prom: <strong id="kpi-vta-prom" style="color:#fff;">$0</strong></span>
       </div>
     </div>
 
     <div class="kpi-card">
       <div class="kpi-title">Shell Box Acumulado</div>
       <div class="kpi-value" id="kpi-sb" style="color:var(--accent-gold);">$0</div>
-      <div class="kpi-details"><span>Ventas App Shell</span></div>
+      <div class="kpi-details"><span>Cobros por App</span></div>
     </div>
 
     <div class="kpi-card">
@@ -107,7 +110,7 @@
     <div class="kpi-card">
       <div class="kpi-title">Ctas / Ctes Acumulado</div>
       <div class="kpi-value" id="kpi-ctasctes">$0</div>
-      <div class="kpi-details"><span>Crédito Casa</span></div>
+      <div class="kpi-details"><span>Cuentas Corrientes</span></div>
     </div>
 
     <div class="kpi-card">
@@ -117,23 +120,205 @@
     </div>
   </div>
 
-  <!-- Cuerpo: Evolución Diaria + Ranking -->
+  <!-- Panel Central: Gráfico y Ranking -->
   <div class="dashboard-body">
     <div class="panel-card">
       <div class="panel-title">Evolución de Ventas Diarias</div>
-      <div style="height: 260px;">
+      <div style="height: 250px;">
         <canvas id="chartEvolucion"></canvas>
       </div>
     </div>
 
     <div class="panel-card">
-      <div class="panel-title">Ranking del Mes (Ventas x Personal)</div>
+      <div class="panel-title">Ranking del Mes (Shell Box x Personal)</div>
       <div class="ranking-list" id="ranking-cajeros">
-        <!-- Generado dinámicamente -->
+        <div style="font-size:0.8rem; color:var(--text-muted);">Cargando personal...</div>
       </div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- Lógica en JavaScript -->
+  <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU-oG-TKjKenhP-yY6wcEyf6gZizKWmboIt6PHavsexY_t3UnIPXuGLcg_MuL379GUy2jaawNCYSSq/pub?gid=0&single=true&output=csv";
+
+    let todosLosDatos = [];
+    let vistaActual = "curso";
+    let chartInstance = null;
+
+    document.addEventListener("DOMContentLoaded", cargarCSV);
+
+    function cargarCSV() {
+      Papa.parse(CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          todosLosDatos = results.data.filter(f => f["Fecha (c3)"] && f["Fecha (c3)"].trim() !== "");
+          poblarSelectorHistorico();
+          procesarDashboard();
+        }
+      });
+    }
+
+    function parsearMonto(valor) {
+      if (!valor) return 0;
+      let str = valor.toString().replace(/\$/g, "").trim();
+      if (str.includes(",") && str.includes(".")) str = str.replace(/\./g, "").replace(",", ".");
+      else if (str.includes(",")) str = str.replace(",", ".");
+      const n = parseFloat(str);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function formatearARS(monto) {
+      return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(monto);
+    }
+
+    function cambiarVista(vista) {
+      vistaActual = vista;
+      document.getElementById("btn-curso").classList.toggle("active", vista === "curso");
+      document.getElementById("btn-historico").classList.toggle("active", vista === "historico");
+      document.getElementById("select-mes-historico").style.display = (vista === "historico") ? "inline-block" : "none";
+      procesarDashboard();
+    }
+
+    function poblarSelectorHistorico() {
+      const select = document.getElementById("select-mes-historico");
+      select.innerHTML = "";
+
+      const meses = [...new Set(todosLosDatos.map(r => {
+        const partes = r["Fecha (c3)"].split("-");
+        return `${partes[2]}-${partes[1]}`;
+      }))].sort().reverse();
+
+      const mesesHistoricos = meses.slice(1);
+      mesesHistoricos.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.innerText = `Mes ${m}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function procesarDashboard() {
+      let datosFiltrados = [];
+      const fechaActual = new Date();
+      const mesActualStr = `${fechaActual.getFullYear()}-${String(fechaActual.getMonth() + 1).padStart(2, '0')}`;
+
+      if (vistaActual === "curso") {
+        document.getElementById("label-periodo").innerText = `Mostrando: Mes en Curso (${mesActualStr})`;
+        datosFiltrados = todosLosDatos.filter(r => {
+          const p = r["Fecha (c3)"].split("-");
+          return `${p[2]}-${p[1]}` === mesActualStr;
+        });
+      } else {
+        const mesSel = document.getElementById("select-mes-historico").value;
+        document.getElementById("label-periodo").innerText = `Mostrando Histórico: ${mesSel || "Sin Selección"}`;
+        datosFiltrados = todosLosDatos.filter(r => {
+          const p = r["Fecha (c3)"].split("-");
+          return `${p[2]}-${p[1]}` === mesSel;
+        });
+      }
+
+      renderizarMetricasYGrafico(datosFiltrados);
+    }
+
+    function renderizarMetricasYGrafico(datos) {
+      let totalVta = 0, totalSB = 0, totalTarjetas = 0, totalCtasCtes = 0, totalMP = 0;
+      let ventasPorDia = {};
+      let rankingPersonas = {};
+
+      datos.forEach(r => {
+        const vta = parsearMonto(r["Vta Total (R11)"]);
+        const sb = parsearMonto(r["Shell Box(R6)"]);
+        const tarj = parsearMonto(r["Tarjetas(R9)"]);
+        const ctas = parsearMonto(r["Ctas/ctes(R8)"]);
+        const mp = parsearMonto(r["Mercado PAgo(R7)"]);
+
+        totalVta += vta;
+        totalSB += sb;
+        totalTarjetas += tarj;
+        totalCtasCtes += ctas;
+        totalMP += mp;
+
+        const fecha = r["Fecha (c3)"];
+        ventasPorDia[fecha] = (ventasPorDia[fecha] || 0) + vta;
+
+        // Distribución equitativa de Shell Box entre Cajero 1 y Cajero 2
+        const c1 = r["Cajero1(f3)"] ? r["Cajero1(f3)"].trim() : "";
+        const c2 = r["Cajero2(f4)"] ? r["Cajero2(f4)"].trim() : "";
+        const cajerosValidos = [c1, c2].filter(c => c && c !== "0");
+
+        if (cajerosValidos.length > 0) {
+          const parteMonto = sb / cajerosValidos.length;
+          cajerosValidos.forEach(c => {
+            rankingPersonas[c] = (rankingPersonas[c] || 0) + parteMonto;
+          });
+        }
+      });
+
+      const diasUnicos = Object.keys(ventasPorDia).length || 1;
+      const promedioDiario = totalVta / diasUnicos;
+      const proyeccionMes = promedioDiario * 30;
+
+      document.getElementById("kpi-vta-acum").innerText = formatearARS(totalVta);
+      document.getElementById("kpi-vta-proy").innerText = formatearARS(proyeccionMes);
+      document.getElementById("kpi-vta-prom").innerText = formatearARS(promedioDiario);
+      document.getElementById("kpi-sb").innerText = formatearARS(totalSB);
+      document.getElementById("kpi-tarjetas").innerText = formatearARS(totalTarjetas);
+      document.getElementById("kpi-ctasctes").innerText = formatearARS(totalCtasCtes);
+      document.getElementById("kpi-mp").innerText = formatearARS(totalMP);
+
+      // Render de Ranking
+      const rankingEl = document.getElementById("ranking-cajeros");
+      rankingEl.innerHTML = "";
+      
+      const rankingOrdenado = Object.entries(rankingPersonas).sort((a, b) => b[1] - a[1]);
+      
+      if (rankingOrdenado.length === 0) {
+        rankingEl.innerHTML = `<div style="font-size:0.8rem; color:var(--text-muted);">Sin registros en el período</div>`;
+      } else {
+        rankingOrdenado.forEach(([nombre, monto], idx) => {
+          rankingEl.innerHTML += `
+            <div class="ranking-item">
+              <span class="ranking-name">${idx + 1}. ${nombre}</span>
+              <span class="ranking-val">${formatearARS(monto)}</span>
+            </div>
+          `;
+        });
+      }
+
+      renderizarGrafico(Object.keys(ventasPorDia), Object.values(ventasPorDia));
+    }
+
+    function renderizarGrafico(labels, data) {
+      const ctx = document.getElementById("chartEvolucion").getContext("2d");
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Venta Diaria ($)",
+            data: data,
+            borderColor: "#f59e0b",
+            backgroundColor: "rgba(245, 158, 11, 0.1)",
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: "#9ca3af" }, grid: { color: "#1f293d" } },
+            y: { ticks: { color: "#9ca3af" }, grid: { color: "#1f293d" } }
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>
