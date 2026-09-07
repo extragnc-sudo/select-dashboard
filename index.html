@@ -73,9 +73,7 @@
     </select>
   </div>
 
-  <!-- Pastillas Métricas -->
   <div class="kpi-grid">
-    <!-- Pastilla Venta Total: Proyección como valor principal -->
     <div class="kpi-card">
       <div class="kpi-title">Proyección Venta Mes</div>
       <div class="kpi-value" id="kpi-vta-proy" style="color:var(--accent-gold);">$0</div>
@@ -132,6 +130,7 @@
     let todosLosDatos = [];
     let vistaActual = "curso";
     let chartInstance = null;
+    let mesSeleccionadoAnioMes = "";
 
     document.addEventListener("DOMContentLoaded", cargarCSV);
 
@@ -161,11 +160,16 @@
       return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(monto);
     }
 
-    // Convierte "DD-MM-YYYY" a un objeto Date (a las 00:00:00 local)
     function parsearFechaLocal(fechaStr) {
       const partes = fechaStr.split("-");
       if (partes.length !== 3) return null;
       return new Date(parseInt(partes[2], 10), parseInt(partes[1], 10) - 1, parseInt(partes[0], 10));
+    }
+
+    // Retorna la cantidad de días totales que tiene un determinado mes (ej: Agosto=31, Septiembre=30)
+    function obtenerDiasDelMes(anioMesStr) {
+      const [anio, mes] = anioMesStr.split("-").map(Number);
+      return new Date(anio, mes, 0).getDate();
     }
 
     function cambiarVista(vista) {
@@ -197,11 +201,11 @@
     function procesarDashboard() {
       let datosFiltrados = [];
       const hoy = new Date();
-      // Limpiamos horas para comparar únicamente fechas a nivel de día
       const fechaHoyLimpia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
       const mesActualStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
 
       if (vistaActual === "curso") {
+        mesSeleccionadoAnioMes = mesActualStr;
         document.getElementById("label-periodo").innerText = `Mostrando: Mes en Curso (${mesActualStr}) - Solo días cerrados`;
         
         datosFiltrados = todosLosDatos.filter(r => {
@@ -211,12 +215,12 @@
           const p = r["Fecha (c3)"].split("-");
           const esMesActual = `${p[2]}-${p[1]}` === mesActualStr;
           
-          // CRITERIO: Debe pertenecer al mes actual Y ser estrictamente menor al día de hoy (< hoy)
           return esMesActual && (fObj < fechaHoyLimpia);
         });
       } else {
-        const mesSel = document.getElementById("select-mes-historico").value;
-        document.getElementById("label-periodo").innerText = `Mostrando Histórico: ${mesSel || "Sin Selección"}`;
+        const mesSel = document.getElementById("select-mes-historico").value || mesActualStr;
+        mesSeleccionadoAnioMes = mesSel;
+        document.getElementById("label-periodo").innerText = `Mostrando Histórico: ${mesSel}`;
         
         datosFiltrados = todosLosDatos.filter(r => {
           const p = r["Fecha (c3)"].split("-");
@@ -248,24 +252,29 @@
         const fecha = r["Fecha (c3)"];
         ventasPorDia[fecha] = (ventasPorDia[fecha] || 0) + vta;
 
-        // Reparto equitativo de Shell Box entre Cajero 1 y Cajero 2
         const c1 = r["Cajero1(f3)"] ? r["Cajero1(f3)"].trim() : "";
         const c2 = r["Cajero2(f4)"] ? r["Cajero2(f4)"].trim() : "";
-        const cajerosValidos = [c1, c2].filter(c => c && c !== "0");
+        
+        const cajerosValidos = [c1, c2].filter(c => c && c !== "0" && c !== "-");
 
         if (cajerosValidos.length > 0) {
           const parteMonto = sb / cajerosValidos.length;
           cajerosValidos.forEach(c => {
-            rankingPersonas[c] = (rankingPersonas[c] || 0) + parteMonto;
+            const nombreNormal = c.charAt(0).toUpperCase() + c.slice(1).toLowerCase();
+            rankingPersonas[nombreNormal] = (rankingPersonas[nombreNormal] || 0) + parteMonto;
           });
+        } else if (sb > 0) {
+          rankingPersonas["Sin Asignar"] = (rankingPersonas["Sin Asignar"] || 0) + sb;
         }
       });
 
-      const diasCerrados = Object.keys(ventasPorDia).length || 1;
-      const promedioDiario = totalVta / diasCerrados;
-      const proyeccionMes = promedioDiario * 30;
+      // Cálculo de días transcurridos y proyección calendario
+      const diasTranscurridos = Object.keys(ventasPorDia).length || 1;
+      const promedioDiario = totalVta / diasTranscurridos;
+      
+      const diasTotalesDelMes = obtenerDiasDelMes(mesSeleccionadoAnioMes);
+      const proyeccionMes = promedioDiario * diasTotalesDelMes;
 
-      // Asignación de valores
       document.getElementById("kpi-vta-proy").innerText = formatearARS(proyeccionMes);
       document.getElementById("kpi-vta-acum").innerText = formatearARS(totalVta);
       document.getElementById("kpi-vta-prom").innerText = formatearARS(promedioDiario);
