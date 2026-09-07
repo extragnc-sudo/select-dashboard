@@ -40,14 +40,14 @@
     .kpi-value { font-size: 1.25rem; font-weight: 800; color: #fff; margin: 4px 0; }
     .kpi-details { font-size: 0.7rem; color: var(--text-muted); display: flex; justify-content: space-between; }
 
-    .dashboard-body { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .dashboard-body { display: grid; grid-template-columns: 2fr 1.2fr; gap: 16px; margin-bottom: 16px; }
     .panel-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
     .panel-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
 
     .ranking-list { display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; }
     .ranking-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; padding: 6px 0; border-bottom: 1px solid #1a2333; }
-    .ranking-name { font-weight: 600; color: var(--text-main); flex: 1; }
-    .ranking-shifts { font-size: 0.72rem; color: var(--text-muted); padding: 0 10px; font-weight: 500; }
+    .ranking-name { font-weight: 600; color: var(--text-main); flex: 1; min-width: 110px; }
+    .ranking-shifts { font-size: 0.72rem; color: var(--text-muted); padding: 0 10px; font-weight: 500; text-align: right; }
     .ranking-val { font-weight: 700; color: var(--accent-gold); white-space: nowrap; }
 
     @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -241,7 +241,7 @@
     function renderizarMetricasYGrafico(datos) {
       let totalVta = 0, totalSB = 0, totalTarjetas = 0, totalCtasCtes = 0, totalMP = 0;
       let ventasPorDia = {};
-      let rankingPersonas = {}; // Guarda { monto: 0, manana: 0, tarde: 0 }
+      let rankingPersonas = {}; // Guarda { monto: 0, manana: 0, tarde: 0, diasUnicos: Set() }
 
       datos.forEach(r => {
         const vta = parsearMonto(r["Vta Total (R11)"]);
@@ -259,7 +259,6 @@
         const fecha = r["Fecha (c3)"];
         ventasPorDia[fecha] = (ventasPorDia[fecha] || 0) + vta;
 
-        // Cajero1 = Mañana | Cajero2 = Tarde
         const c1 = normalizarNombre(r["Cajero1(f3)"]);
         const c2 = normalizarNombre(r["Cajero2(f4)"]);
         
@@ -269,18 +268,20 @@
           const parteMonto = sb / cajerosValidos.length;
 
           if (c1) {
-            if (!rankingPersonas[c1]) rankingPersonas[c1] = { monto: 0, manana: 0, tarde: 0 };
+            if (!rankingPersonas[c1]) rankingPersonas[c1] = { monto: 0, manana: 0, tarde: 0, diasUnicos: new Set() };
             rankingPersonas[c1].monto += parteMonto;
             rankingPersonas[c1].manana += 1;
+            rankingPersonas[c1].diasUnicos.add(fecha);
           }
 
           if (c2) {
-            if (!rankingPersonas[c2]) rankingPersonas[c2] = { monto: 0, manana: 0, tarde: 0 };
+            if (!rankingPersonas[c2]) rankingPersonas[c2] = { monto: 0, manana: 0, tarde: 0, diasUnicos: new Set() };
             rankingPersonas[c2].monto += parteMonto;
             rankingPersonas[c2].tarde += 1;
+            rankingPersonas[c2].diasUnicos.add(fecha);
           }
         } else if (sb > 0) {
-          if (!rankingPersonas["Sin Asignar"]) rankingPersonas["Sin Asignar"] = { monto: 0, manana: 0, tarde: 0 };
+          if (!rankingPersonas["Sin Asignar"]) rankingPersonas["Sin Asignar"] = { monto: 0, manana: 0, tarde: 0, diasUnicos: new Set() };
           rankingPersonas["Sin Asignar"].monto += sb;
         }
       });
@@ -310,9 +311,13 @@
         rankingEl.innerHTML = `<div style="font-size:0.8rem; color:var(--text-muted);">Sin registros cerrados en el período</div>`;
       } else {
         rankingOrdenado.forEach(([nombre, info], idx) => {
-          const textoTurnos = (nombre === "Sin Asignar") 
-            ? "" 
-            : `(M: ${info.manana}d / T: ${info.tarde}d)`;
+          let textoTurnos = "";
+
+          if (nombre !== "Sin Asignar") {
+            const diasTrabajados = info.diasUnicos.size || 1;
+            const promDiarioPersona = info.monto / diasTrabajados;
+            textoTurnos = `(M: ${info.manana}d / T: ${info.tarde}d | Prom: ${formatearARS(promDiarioPersona)}/d)`;
+          }
 
           rankingEl.innerHTML += `
             <div class="ranking-item">
