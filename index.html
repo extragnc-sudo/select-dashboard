@@ -3,339 +3,352 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Control Select</title>
+  <title>DASHBOARD - SELECT</title>
+  <!-- Chart.js para el gráfico de evolución -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg-color: #0b0f17;
-      --card-bg: #111827;
-      --border-color: #1f2937;
-      --text-main: #f9fafb;
-      --text-muted: #9ca3af;
-      --accent-blue: #38bdf8;
-      --badge-bg: #1e293b;
+      --bg-main: #0a0d14;
+      --bg-card: #111622;
+      --bg-card-border: #1a2333;
+      --text-main: #ffffff;
+      --text-muted: #8a99ad;
+      --accent-orange: #ff9900;
+      --accent-blue: #2563eb;
+      --accent-cyan: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     body {
-      background-color: var(--bg-color);
+      background-color: var(--bg-main);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 24px;
     }
 
     .container {
-      max-width: 1300px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
+    /* HEADER PRINCIPAL */
     header {
-      margin-bottom: 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 20px;
     }
 
-    h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
+    .header-title h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
       margin: 0;
+      letter-spacing: 0.5px;
+      color: #ffffff;
     }
 
-    /* GRID DE TARJETAS KPI (ACUMULADO + PROYECCION) */
-    .kpi-grid-select {
+    .header-title p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 3px 0 0 0;
+    }
+
+    /* BOTONES MES EN CURSO / HISTORICO */
+    .nav-toggle {
+      background: #111622;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      padding: 4px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-toggle {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-toggle.active {
+      background: var(--accent-orange);
+      color: #000000;
+      font-weight: 700;
+    }
+
+    /* BANNER MOSTRANDO */
+    .info-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* GRID TARJETAS KPIS */
+    .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(5, 1fr);
       gap: 16px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
-    .card-kpi {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 18px;
-      text-align: center;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 16px;
+      position: relative;
     }
 
-    .kpi-title {
+    .kpi-card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-card-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .val-white { color: #ffffff; }
+    .val-orange { color: var(--accent-orange); }
+    .val-blue { color: #3b82f6; }
+
+    .kpi-card-sub {
       font-size: 0.75rem;
       color: var(--text-muted);
+    }
+
+    .kpi-card-sub span {
+      color: #ffffff;
       font-weight: 700;
+    }
+
+    /* GRID DE CONTENIDO PRINCIPAL (GRÁFICO + RANKING) */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 20px;
+    }
+
+    .panel-box {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 20px;
+      min-height: 380px;
+    }
+
+    .panel-box h3 {
+      font-size: 0.85rem;
+      font-weight: 800;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      margin: 0 0 20px 0;
+      color: #ffffff;
     }
 
-    .kpi-proyeccion {
-      font-size: 2.2rem;
+    /* RANKING HORIZONTAL */
+    .ranking-container {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+
+    .ranking-num {
       font-weight: 800;
-      color: var(--accent-blue);
-      margin: 8px 0;
+      color: #ffffff;
     }
 
-    .kpi-sub {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .kpi-sub b {
-      color: var(--text-main);
-    }
-
-    /* PANELES DE TABLAS */
-    .panel {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 25px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    }
-
-    .panel h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-      color: var(--text-main);
-      margin-bottom: 16px;
-    }
-
-    .table-container {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
-      text-align: left;
-    }
-
-    th {
-      background: #1f2937;
-      color: var(--text-muted);
-      padding: 10px 12px;
+    .ranking-name {
+      color: #ffffff;
       font-weight: 600;
-      border-bottom: 2px solid var(--border-color);
     }
 
-    td {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border-color);
-      color: var(--text-main);
-    }
-
-    tr:hover {
-      background: #1e293b;
-    }
-
-    .badge-turno {
-      background: var(--badge-bg);
-      color: var(--accent-blue);
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 700;
-    }
-
-    .total-highlight {
-      color: var(--accent-blue);
-      font-weight: bold;
+    .ranking-val {
+      color: var(--accent-orange);
+      font-weight: 800;
     }
   </style>
 </head>
 <body>
 
   <div class="container">
+    
+    <!-- HEADER -->
     <header>
-      <h1>Control Select — Dashboard Integral</h1>
+      <div class="header-title">
+        <h1>DASHBOARD - SELECT</h1>
+        <p>Control de Ventas & Rendimiento de Tienda</p>
+      </div>
+
+      <div class="nav-toggle">
+        <button class="btn-toggle active">Mes en Curso</button>
+        <button class="btn-toggle">Histórico</button>
+      </div>
     </header>
 
-    <!-- 1. ACUMULADOS, PROMEDIO Y PROYECCIÓN MENSUAL -->
-    <div class="kpi-grid-select">
-      <div class="card-kpi">
-        <span class="kpi-title">Cafés / Infusiones</span>
-        <div class="kpi-proyeccion" id="kpi-cafes-proy">0</div>
-        <div class="kpi-sub">Acum: <b id="kpi-cafes-acum">0</b> | Prom: <b id="kpi-cafes-prom">0</b>/día</div>
-      </div>
-      <div class="card-kpi">
-        <span class="kpi-title">Facturas / Medialunas</span>
-        <div class="kpi-proyeccion" id="kpi-facturas-proy">0</div>
-        <div class="kpi-sub">Acum: <b id="kpi-facturas-acum">0</b> | Prom: <b id="kpi-facturas-prom">0</b>/día</div>
-      </div>
-      <div class="card-kpi">
-        <span class="kpi-title">Sándwiches</span>
-        <div class="kpi-proyeccion" id="kpi-sandwiches-proy">0</div>
-        <div class="kpi-sub">Acum: <b id="kpi-sandwiches-acum">0</b> | Prom: <b id="kpi-sandwiches-prom">0</b>/día</div>
-      </div>
-      <div class="card-kpi">
-        <span class="kpi-title">Promo Servicompras</span>
-        <div class="kpi-proyeccion" id="kpi-promo39-proy">0</div>
-        <div class="kpi-sub">Acum: <b id="kpi-promo39-acum">0</b> | Prom: <b id="kpi-promo39-prom">0</b>/día</div>
-      </div>
-      <div class="card-kpi">
-        <span class="kpi-title">Fast Food / Platos</span>
-        <div class="kpi-proyeccion" id="kpi-fastfood-proy">0</div>
-        <div class="kpi-sub">Acum: <b id="kpi-fastfood-acum">0</b> | Prom: <b id="kpi-fastfood-prom">0</b>/día</div>
-      </div>
+    <!-- BANNER DE RANGO DE FECHAS -->
+    <div class="info-bar" id="info-mes">
+      Mostrando: Mes en Curso (2026-09)
     </div>
 
-    <!-- 2. DESGLOSE ACUMULADO POR CAJERO (REPARTO 50/50) -->
-    <div class="panel">
-      <h2>Acumulado Mensual por Cajero</h2>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Cajero / Operario</th>
-              <th>Cafés</th>
-              <th>Facturas</th>
-              <th>Sándwiches</th>
-              <th>Promos 039</th>
-              <th>Fast Food</th>
-              <th>Total Unidades</th>
-            </tr>
-          </thead>
-          <tbody id="body-tabla-cajeros">
-            <!-- Datos acumulados por cajero -->
-          </tbody>
-        </table>
+    <!-- TARJETAS DE INDICADORES PRINCIPALES (KPIS) -->
+    <div class="kpi-grid">
+      
+      <div class="kpi-card">
+        <div class="kpi-card-title">VENTA TOTAL MES</div>
+        <div class="kpi-card-value val-white" id="kpi-venta-total">$ 15.061.600</div>
+        <div class="kpi-card-sub">
+          Proy: <span id="kpi-proy">$ 37.654.000</span> &nbsp; Prom: <span id="kpi-prom">$ 1.255.133</span>
+        </div>
       </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-title">SHELL BOX ACUMULADO</div>
+        <div class="kpi-card-value val-orange" id="kpi-shellbox">$ 2.796.245</div>
+        <div class="kpi-card-sub">Cobros por App</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-title">TARJETAS ACUMULADO</div>
+        <div class="kpi-card-value val-white" id="kpi-tarjetas">$ 2.646.238</div>
+        <div class="kpi-card-sub">Débito / Crédito</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-title">CTAS / CTES ACUMULADO</div>
+        <div class="kpi-card-value val-white" id="kpi-ctas">$ 866.000</div>
+        <div class="kpi-card-sub">Cuentas Corrientes</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-title">MERCADO PAGO</div>
+        <div class="kpi-card-value val-blue" id="kpi-mp">$ 2.833.000</div>
+        <div class="kpi-card-sub">Cobros QR</div>
+      </div>
+
     </div>
 
-    <!-- 3. DETALLE DE VENTAS POR JORNADA Y TURNO -->
-    <div class="panel">
-      <h2>Detalle de Ventas por Jornada</h2>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Turno</th>
-              <th>Cajero 1</th>
-              <th>Cajero 2</th>
-              <th>Cafés</th>
-              <th>Facturas</th>
-              <th>Sándwiches</th>
-              <th>Promos 039</th>
-              <th>Fast Food</th>
-            </tr>
-          </thead>
-          <tbody id="body-tabla-jornadas">
-            <!-- Detalle fila por fila -->
-          </tbody>
-        </table>
+    <!-- SECCIÓN GRÁFICO Y RANKING -->
+    <div class="main-grid">
+      
+      <!-- GRÁFICO DE LÍNEA -->
+      <div class="panel-box">
+        <h3>EVOLUCIÓN DE VENTAS DIARIAS</h3>
+        <div style="height: 300px; width: 100%;">
+          <canvas id="chartVentas"></canvas>
+        </div>
       </div>
+
+      <!-- RANKING SHELL BOX -->
+      <div class="panel-box">
+        <h3>RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
+        <div class="ranking-container">
+          
+          <div class="ranking-item">
+            <span class="ranking-num">1.</span>
+            <span class="ranking-name">Milagros</span>
+            <span class="ranking-val">$ 1.028.040</span>
+          </div>
+
+          <div class="ranking-item">
+            <span class="ranking-num">2.</span>
+            <span class="ranking-name">Brenda</span>
+            <span class="ranking-val">$ 789.720</span>
+          </div>
+
+          <div class="ranking-item">
+            <span class="ranking-num">3.</span>
+            <span class="ranking-name">Camila</span>
+            <span class="ranking-val">$ 506.103</span>
+          </div>
+
+          <div class="ranking-item">
+            <span class="ranking-num">4.</span>
+            <span class="ranking-name">Romina</span>
+            <span class="ranking-val">$ 443.983</span>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
   </div>
 
   <script>
-    function actualizarDashboardSelect(registrosHoja) {
-      const hoy = new Date();
-      const mesActual = hoy.getMonth();
-      const anioActual = hoy.getFullYear();
-      
-      const diaCerrado = hoy.getDate() - 1; 
-      const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
-
-      let acumulados = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastFood: 0 };
-      let rankingCajeros = {};
-
-      const tbodyJornadas = document.getElementById('body-tabla-jornadas');
-      tbodyJornadas.innerHTML = '';
-
-      registrosHoja.forEach(fila => {
-        if (!fila.fecha) return;
-
-        const partesFecha = fila.fecha.split('-');
-        let f = partesFecha.length === 3 ? new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]) : new Date(fila.fecha);
-
-        const c = Number(fila.cafes || 0);
-        const fac = Number(fila.facturas || 0);
-        const s = Number(fila.sandwiches || 0);
-        const p = Number(fila.promo39 || 0);
-        const ff = Number(fila.fastFood || 0);
-
-        // A. Cargar fila en el Detalle por Jornada
-        const trJornada = document.createElement('tr');
-        trJornada.innerHTML = `
-          <td>${fila.fecha}</td>
-          <td><span class="badge-turno">${fila.turno || '—'}</span></td>
-          <td>${fila.playero1 || '—'}</td>
-          <td>${fila.playero2 || '—'}</td>
-          <td>${c}</td>
-          <td>${fac}</td>
-          <td>${s}</td>
-          <td>${p}</td>
-          <td>${ff}</td>
-        `;
-        tbodyJornadas.appendChild(trJornada);
-
-        // B. Calcular acumulados del mes a día cerrado
-        if (f.getMonth() === mesActual && f.getFullYear() === anioActual && f.getDate() <= diaCerrado) {
-          
-          acumulados.cafes += c;
-          acumulados.facturas += fac;
-          acumulados.sandwiches += s;
-          acumulados.promo39 += p;
-          acumulados.fastFood += ff;
-
-          let cajeros = [];
-          if (fila.playero1 && fila.playero1.trim() !== "" && fila.playero1 !== "—") cajeros.push(fila.playero1.trim());
-          if (fila.playero2 && fila.playero2.trim() !== "" && fila.playero2 !== "—") cajeros.push(fila.playero2.trim());
-
-          if (cajeros.length > 0) {
-            const factor = 1 / cajeros.length;
-
-            cajeros.forEach(cajero => {
-              if (!rankingCajeros[cajero]) {
-                rankingCajeros[cajero] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastFood: 0 };
+    // Inicialización del Gráfico de Evolución con Chart.js
+    const ctx = document.getElementById('chartVentas').getContext('2d');
+    
+    const chartVentas = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [
+          '01-09-2026', '02-09-2026', '03-09-2026', '04-09-2026', 
+          '05-09-2026', '06-09-2026', '07-09-2026', '08-09-2026', 
+          '09-09-2026', '10-09-2026', '11-09-2026', '12-09-2026'
+        ],
+        datasets: [{
+          label: 'Ventas Diarias',
+          data: [2600000, 3000000, 3200000, 2800000, 1600000, 350000, 1050000, 0, 0, 0, 0, 0],
+          borderColor: '#ff9900',
+          backgroundColor: '#ff9900',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#ff9900',
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: '#1a2333' },
+            ticks: { color: '#8a99ad', font: { size: 10 } }
+          },
+          y: {
+            grid: { color: '#1a2333' },
+            ticks: { 
+              color: '#8a99ad',
+              callback: function(val) {
+                return val.toLocaleString('es-AR');
               }
-              rankingCajeros[cajero].cafes += (c * factor);
-              rankingCajeros[cajero].facturas += (fac * factor);
-              rankingCajeros[cajero].sandwiches += (s * factor);
-              rankingCajeros[cajero].promo39 += (p * factor);
-              rankingCajeros[cajero].fastFood += (ff * factor);
-            });
+            },
+            min: 0,
+            max: 3500000
           }
         }
-      });
-
-      // C. Renderizar Tarjetas KPI
-      const factorProy = diaCerrado > 0 ? (diasEnMes / diaCerrado) : 0;
-      const kpis = ['cafes', 'facturas', 'sandwiches', 'promo39', 'fastFood'];
-
-      kpis.forEach(kpi => {
-        const total = acumulados[kpi];
-        const prom = diaCerrado > 0 ? (total / diaCerrado).toFixed(1) : 0;
-        const proy = Math.round(total * factorProy);
-
-        document.getElementById(`kpi-${kpi}-proy`).innerText = proy.toLocaleString('es-AR');
-        document.getElementById(`kpi-${kpi}-acum`).innerText = total.toLocaleString('es-AR');
-        document.getElementById(`kpi-${kpi}-prom`).innerText = prom;
-      });
-
-      // D. Renderizar Tabla de Cajeros
-      const tbodyCajeros = document.getElementById('body-tabla-cajeros');
-      tbodyCajeros.innerHTML = '';
-
-      Object.keys(rankingCajeros).sort().forEach(cajero => {
-        const d = rankingCajeros[cajero];
-        const totalCajero = d.cafes + d.facturas + d.sandwiches + d.promo39 + d.fastFood;
-
-        const trCajero = document.createElement('tr');
-        trCajero.innerHTML = `
-          <td><b>${cajero}</b></td>
-          <td>${Math.round(d.cafes)}</td>
-          <td>${Math.round(d.facturas)}</td>
-          <td>${Math.round(d.sandwiches)}</td>
-          <td>${Math.round(d.promo39)}</td>
-          <td>${Math.round(d.fastFood)}</td>
-          <td class="total-highlight">${Math.round(totalCajero)}</td>
-        `;
-        tbodyCajeros.appendChild(trCajero);
-      });
-    }
+      }
+    });
   </script>
 </body>
 </html>
