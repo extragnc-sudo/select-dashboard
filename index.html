@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DASHBOARD - SELECT</title>
-  <!-- Chart.js -->
+  <!-- Chart.js para el gráfico de evolución -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -94,7 +94,7 @@
       margin-bottom: 20px;
     }
 
-    /* GRID KPIS SUPERIORES */
+    /* GRID KPIS MONETARIOS */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -138,7 +138,7 @@
       color: #ffffff;
     }
 
-    /* GRID EVOLUCIÓN Y RANKING SHELL BOX */
+    /* PANEL PRINCIPAL: GRÁFICO + RANKING SHELL BOX */
     .main-grid {
       display: grid;
       grid-template-columns: 1.5fr 1fr;
@@ -265,7 +265,7 @@
       Mostrando: Mes en Curso (2026-09) - Solo días cerrados
     </div>
 
-    <!-- 1. KPIS MONETARIOS PRINCIPALES -->
+    <!-- KPIS MONETARIOS PRINCIPALES -->
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-card-title">PROYECCIÓN VENTA MES</div>
@@ -298,7 +298,7 @@
       </div>
     </div>
 
-    <!-- 2. EVOLUCIÓN DE VENTAS & RANKING SHELL BOX -->
+    <!-- EVOLUCIÓN DE VENTAS & RANKING SHELL BOX -->
     <div class="main-grid">
       <div class="panel-box">
         <h3>EVOLUCIÓN DE VENTAS DIARIAS (DÍAS CERRADOS)</h3>
@@ -310,7 +310,6 @@
       <div class="panel-box">
         <h3>RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
         <div class="ranking-list" id="ranking-shellbox">
-          
           <div class="ranking-row">
             <div class="ranking-user">
               <span class="ranking-num">1.</span>
@@ -319,7 +318,6 @@
             </div>
             <span class="ranking-val">$ 1.028.040</span>
           </div>
-
           <div class="ranking-row">
             <div class="ranking-user">
               <span class="ranking-num">2.</span>
@@ -328,7 +326,6 @@
             </div>
             <span class="ranking-val">$ 818.120</span>
           </div>
-
           <div class="ranking-row">
             <div class="ranking-user">
               <span class="ranking-num">3.</span>
@@ -337,7 +334,6 @@
             </div>
             <span class="ranking-val">$ 506.103</span>
           </div>
-
           <div class="ranking-row">
             <div class="ranking-user">
               <span class="ranking-num">4.</span>
@@ -346,12 +342,11 @@
             </div>
             <span class="ranking-val">$ 443.983</span>
           </div>
-
         </div>
       </div>
     </div>
 
-    <!-- 3. KPIS DE UNIDADES SELECT (CAFÉS, FACTURAS, PROMOS, ETC) -->
+    <!-- KPIS UNIDADES SELECT -->
     <div class="kpi-grid" style="margin-bottom: 20px;">
       <div class="kpi-card">
         <div class="kpi-card-title">CAFÉS / INFUSIONES</div>
@@ -380,7 +375,7 @@
       </div>
     </div>
 
-    <!-- 4. ACUMULADO MENSUAL POR CAJERO (50/50) -->
+    <!-- ACUMULADO MENSUAL POR CAJERO (50/50) -->
     <div class="panel-box" style="margin-bottom: 20px;">
       <h3>ACUMULADO MENSUAL POR CAJERO (UNIDADES)</h3>
       <div class="table-container">
@@ -403,7 +398,7 @@
       </div>
     </div>
 
-    <!-- 5. DETALLE DE VENTAS POR JORNADA Y TURNO -->
+    <!-- DETALLE DE VENTAS POR JORNADA -->
     <div class="panel-box">
       <h3>DETALLE DE VENTAS POR JORNADA</h3>
       <div class="table-container">
@@ -431,7 +426,7 @@
   </div>
 
   <script>
-    // Inicializar Gráfico de Evolución
+    // 1. Gráfico de Evolución
     const ctx = document.getElementById('chartVentas').getContext('2d');
     new Chart(ctx, {
       type: 'line',
@@ -457,8 +452,10 @@
       }
     });
 
-    // Función para procesar y actualizar las métricas de unidades
+    // 2. Procesador de Unidades y Tablas
     function procesarUnidadesSelect(registros) {
+      if (!registros || registros.length === 0) return;
+
       const hoy = new Date();
       const mesActual = hoy.getMonth();
       const anioActual = hoy.getFullYear();
@@ -480,7 +477,7 @@
         const p = Number(fila.promo39 || 0);
         const ff = Number(fila.fastFood || 0);
 
-        // Render fila detalle
+        // Fila Detalle
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${fila.fecha}</td>
@@ -495,32 +492,32 @@
         `;
         tbodyJornadas.appendChild(tr);
 
-        // Sumar acumulados del mes
+        // Acumulados
         acumulados.cafes += c;
         acumulados.facturas += fac;
         acumulados.sandwiches += s;
         acumulados.promo39 += p;
         acumulados.fastFood += ff;
 
-        // Reparto 50/50 por cajero
+        // Reparto 50/50
         let cajeros = [];
         if (fila.playero1 && fila.playero1 !== "—") cajeros.push(fila.playero1.trim());
         if (fila.playero2 && fila.playero2 !== "—") cajeros.push(fila.playero2.trim());
 
         if (cajeros.length > 0) {
           const factor = 1 / cajeros.length;
-          cajeros.forEach(c => {
-            if (!rankingCajeros[c]) rankingCajeros[c] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastFood: 0 };
-            rankingCajeros[c].cafes += (c * factor);
-            rankingCajeros[c].facturas += (fac * factor);
-            rankingCajeros[c].sandwiches += (s * factor);
-            rankingCajeros[c].promo39 += (p * factor);
-            rankingCajeros[c].fastFood += (ff * factor);
+          cajeros.forEach(caj => {
+            if (!rankingCajeros[caj]) rankingCajeros[caj] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastFood: 0 };
+            rankingCajeros[caj].cafes += (c * factor);
+            rankingCajeros[caj].facturas += (fac * factor);
+            rankingCajeros[caj].sandwiches += (s * factor);
+            rankingCajeros[caj].promo39 += (p * factor);
+            rankingCajeros[caj].fastFood += (ff * factor);
           });
         }
       });
 
-      // Render KPIs de unidades
+      // Render KPIs
       const factorProy = diasEnMes / diaCerrado;
       ['cafes', 'facturas', 'sandwiches', 'promo39', 'fastFood'].forEach(kpi => {
         const total = acumulados[kpi];
@@ -535,12 +532,12 @@
       // Render Tabla Cajeros
       const tbodyCajeros = document.getElementById('tbody-cajeros');
       tbodyCajeros.innerHTML = '';
-      Object.keys(rankingCajeros).sort().forEach(c => {
-        const d = rankingCajeros[c];
+      Object.keys(rankingCajeros).sort().forEach(caj => {
+        const d = rankingCajeros[caj];
         const total = d.cafes + d.facturas + d.sandwiches + d.promo39 + d.fastFood;
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><b>${c}</b></td>
+          <td><b>${caj}</b></td>
           <td>${Math.round(d.cafes)}</td>
           <td>${Math.round(d.facturas)}</td>
           <td>${Math.round(d.sandwiches)}</td>
@@ -551,6 +548,18 @@
         tbodyCajeros.appendChild(tr);
       });
     }
+
+    // 3. Carga Automática al iniciar
+    document.addEventListener("DOMContentLoaded", () => {
+      const datosEjemplo = [
+        { fecha: '01-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Brenda', cafes: 45, facturas: 80, sandwiches: 12, promo39: 25, fastFood: 8 },
+        { fecha: '01-09-2026', turno: 'Tarde', playero1: 'Camila', playero2: 'Romina', cafes: 30, facturas: 40, sandwiches: 18, promo39: 15, fastFood: 14 },
+        { fecha: '02-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Camila', cafes: 50, facturas: 95, sandwiches: 15, promo39: 30, fastFood: 10 },
+        { fecha: '02-09-2026', turno: 'Tarde', playero1: 'Brenda', playero2: 'Romina', cafes: 28, facturas: 35, sandwiches: 20, promo39: 18, fastFood: 12 }
+      ];
+
+      procesarUnidadesSelect(datosEjemplo);
+    });
   </script>
 </body>
 </html>
