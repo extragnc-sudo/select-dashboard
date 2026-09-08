@@ -263,38 +263,38 @@
 
     <!-- BANNER INFORMATIVO -->
     <div class="info-bar" id="info-banner">
-      Mostrando: Mes en Curso (2026-09) - Solo días cerrados
+      Mostrando: Cargando información a día cerrado...
     </div>
 
     <!-- KPIS MONETARIOS -->
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-card-title">PROYECCIÓN VENTA MES</div>
-        <div class="kpi-card-value val-orange" id="kpi-proy-venta">$ 64.549.714</div>
-        <div class="kpi-card-sub">Acum: <b id="kpi-acum-venta">$ 15.061.600</b> &nbsp; Prom: <b id="kpi-prom-venta">$ 2.151.657</b></div>
+        <div class="kpi-card-value val-orange" id="kpi-proy-venta">$ 0</div>
+        <div class="kpi-card-sub">Acum: <b id="kpi-acum-venta">$ 0</b> &nbsp; Prom: <b id="kpi-prom-venta">$ 0</b></div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-card-title">SHELL BOX ACUMULADO</div>
-        <div class="kpi-card-value val-orange" id="kpi-shellbox">$ 2.796.245</div>
+        <div class="kpi-card-value val-orange" id="kpi-shellbox">$ 0</div>
         <div class="kpi-card-sub">Cobros por App</div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-card-title">TARJETAS ACUMULADO</div>
-        <div class="kpi-card-value val-white" id="kpi-tarjetas">$ 2.911.738</div>
+        <div class="kpi-card-value val-white" id="kpi-tarjetas">$ 0</div>
         <div class="kpi-card-sub">Débito / Crédito</div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-card-title">CTAS / CTES ACUMULADO</div>
-        <div class="kpi-card-value val-white" id="kpi-ctas">$ 866.000</div>
+        <div class="kpi-card-value val-white" id="kpi-ctas">$ 0</div>
         <div class="kpi-card-sub">Cuentas Corrientes</div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-card-title">MERCADO PAGO</div>
-        <div class="kpi-card-value val-blue" id="kpi-mp">$ 2.833.000</div>
+        <div class="kpi-card-value val-blue" id="kpi-mp">$ 0</div>
         <div class="kpi-card-sub">Cobros QR</div>
       </div>
     </div>
@@ -311,38 +311,7 @@
       <div class="panel-box">
         <h3 id="ranking-title">RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
         <div class="ranking-list" id="ranking-shellbox">
-          <div class="ranking-row">
-            <div class="ranking-user">
-              <span class="ranking-num">1.</span>
-              <span class="ranking-name">Milagros</span>
-              <span class="ranking-metrics">(M: 4d / T: 2d | Prom: $ 171.340/d)</span>
-            </div>
-            <span class="ranking-val">$ 1.028.040</span>
-          </div>
-          <div class="ranking-row">
-            <div class="ranking-user">
-              <span class="ranking-num">2.</span>
-              <span class="ranking-name">Brenda</span>
-              <span class="ranking-metrics">(M: 2d / T: 4d | Prom: $ 136.353/d)</span>
-            </div>
-            <span class="ranking-val">$ 818.120</span>
-          </div>
-          <div class="ranking-row">
-            <div class="ranking-user">
-              <span class="ranking-num">3.</span>
-              <span class="ranking-name">Camila</span>
-              <span class="ranking-metrics">(M: 3d / T: 3d | Prom: $ 84.350/d)</span>
-            </div>
-            <span class="ranking-val">$ 506.103</span>
-          </div>
-          <div class="ranking-row">
-            <div class="ranking-user">
-              <span class="ranking-num">4.</span>
-              <span class="ranking-name">Romina</span>
-              <span class="ranking-metrics">(M: 4d / T: 2d | Prom: $ 73.997/d)</span>
-            </div>
-            <span class="ranking-val">$ 443.983</span>
-          </div>
+          <!-- Filas de ranking dinámicas -->
         </div>
       </div>
     </div>
@@ -401,7 +370,7 @@
 
     <!-- DETALLE DE VENTAS POR JORNADA -->
     <div class="panel-box">
-      <h3>DETALLE DE VENTAS POR JORNADA</h3>
+      <h3>DETALLE DE VENTAS POR JORNADA (DÍAS CERRADOS)</h3>
       <div class="table-container">
         <table>
           <thead>
@@ -426,1560 +395,296 @@
 
   </div>
 
-     <script>
-
-/********************************************************
- * CONFIGURACIÓN
- ********************************************************/
-
-const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbxy45l4j-Z5Weu8IHSburGfBN1pYRBPPjGAn6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
-
-const ACTUALIZAR_CADA_MS = 60000;
-
-
-/********************************************************
- * VARIABLES
- ********************************************************/
-
-let chartVentasInstance = null;
-let modoVista = 'curso';
-let todosLosRegistros = [];
-let mesesDisponibles = [];
-let mesHistoricoSeleccionado = '';
-let datosActuales = null;
-
-
-/********************************************************
- * FORMATEADORES
- ********************************************************/
-
-function numero(valor) {
-
-  if (valor === null || valor === undefined || valor === '') {
-    return 0;
-  }
-
-  if (typeof valor === 'number') {
-    return isNaN(valor) ? 0 : valor;
-  }
-
-  let texto = String(valor).trim();
-
-  texto = texto
-    .replace(/\$/g, '')
-    .replace(/\s/g, '');
-
-  // Formato argentino:
-  // 1.234.567,89
-  if (texto.includes(',') && texto.includes('.')) {
-    texto = texto.replace(/\./g, '').replace(',', '.');
-  }
-  // Solo coma decimal
-  else if (texto.includes(',')) {
-    texto = texto.replace(',', '.');
-  }
-
-  const resultado = Number(texto);
-
-  return isNaN(resultado) ? 0 : resultado;
-}
-
-
-function formatoMoneda(valor) {
-
-  return numero(valor).toLocaleString(
-    'es-AR',
-    {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0
-    }
-  );
-}
-
-
-function formatoNumero(valor) {
-
-  return Math.round(numero(valor)).toLocaleString('es-AR');
-
-}
-
-
-/********************************************************
- * FECHAS
- ********************************************************/
-
-function obtenerFecha(fecha) {
-
-  if (!fecha) return null;
-
-  if (fecha instanceof Date) {
-    return fecha;
-  }
-
-  const texto = String(fecha).trim();
-
-  // YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}/.test(texto)) {
-
-    const partes = texto.substring(0, 10).split('-');
-
-    return new Date(
-      Number(partes[0]),
-      Number(partes[1]) - 1,
-      Number(partes[2])
-    );
-  }
-
-  // DD/MM/YYYY
-  if (/^\d{2}\/\d{2}\/\d{4}/.test(texto)) {
-
-    const partes = texto.substring(0, 10).split('/');
-
-    return new Date(
-      Number(partes[2]),
-      Number(partes[1]) - 1,
-      Number(partes[0])
-    );
-  }
-
-  // DD-MM-YYYY
-  if (/^\d{2}-\d{2}-\d{4}/.test(texto)) {
-
-    const partes = texto.substring(0, 10).split('-');
-
-    return new Date(
-      Number(partes[2]),
-      Number(partes[1]) - 1,
-      Number(partes[0])
-    );
-  }
-
-  const fechaNueva = new Date(texto);
-
-  return isNaN(fechaNueva.getTime())
-    ? null
-    : fechaNueva;
-}
-
-
-function claveMes(fecha) {
-
-  const d = obtenerFecha(fecha);
-
-  if (!d) return '';
-
-  const anio = d.getFullYear();
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-
-  return `${anio}-${mes}`;
-}
-
-
-function nombreMes(clave) {
-
-  if (!clave) return '';
-
-  const partes = clave.split('-');
-
-  const anio = Number(partes[0]);
-  const mes = Number(partes[1]) - 1;
-
-  const nombres = [
-    'Enero',
-    'Febrero',
-    'Marzo',
-    'Abril',
-    'Mayo',
-    'Junio',
-    'Julio',
-    'Agosto',
-    'Septiembre',
-    'Octubre',
-    'Noviembre',
-    'Diciembre'
-  ];
-
-  return `${nombres[mes]} ${anio}`;
-}
-
-
-function formatoFecha(fecha) {
-
-  const d = obtenerFecha(fecha);
-
-  if (!d) return fecha || '—';
-
-  return d.toLocaleDateString(
-    'es-AR',
-    {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }
-  );
-}
-
-
-/********************************************************
- * CARGAR DATOS DESDE APPS SCRIPT
- ********************************************************/
-
-async function cargarDatos() {
-
-  try {
-
-    console.log('Consultando Apps Script...');
-
-    const respuesta = await fetch(
-      APPS_SCRIPT_URL + '?t=' + Date.now(),
-      {
-        method: 'GET',
-        redirect: 'follow'
-      }
-    );
-
-    if (!respuesta.ok) {
-      throw new Error(
-        'Error HTTP: ' + respuesta.status
-      );
-    }
-
-    const json = await respuesta.json();
-
-    console.log('Respuesta Apps Script:', json);
-
-    let registros = [];
-
-    if (Array.isArray(json)) {
-
-      registros = json;
-
-    } else if (Array.isArray(json.registros)) {
-
-      registros = json.registros;
-
-    } else if (Array.isArray(json.data)) {
-
-      registros = json.data;
-
-    } else if (Array.isArray(json.datos)) {
-
-      registros = json.datos;
-
-    } else {
-
-      console.error(
-        'La respuesta no contiene un array de registros:',
-        json
-      );
-
-      return;
-    }
-
-
-    todosLosRegistros = registros
-      .map(normalizarRegistro)
-      .filter(r => r.fecha);
-
-
-    console.log(
-      'Registros cargados:',
-      todosLosRegistros.length
-    );
-
-
-    if (todosLosRegistros.length === 0) {
-
-      document.getElementById('info-banner').innerText =
-        'No se encontraron registros en Datos_selec';
-
-      return;
-    }
-
-
-    actualizarMesesDisponibles();
-
-    renderizarVistaActual();
-
-  }
-  catch (error) {
-
-    console.error(
-      'Error al cargar datos:',
-      error
-    );
-
-    document.getElementById('info-banner').innerText =
-      'Error al conectar con los datos';
-
-  }
-}
-
-
-/********************************************************
- * NORMALIZAR REGISTROS
- *
- * Columnas:
- *
- * A Fecha
- * B Planilla
- * C Turno
- * D Cajero 1
- * E Cajero 2
- * F Venta Total
- * G Shell Box
- * H Mercado Pago
- * I Ctas/Ctes
- * J Tarjetas
- * K Gastos
- * L Recaudado
- * M Diferencia
- * N Cafés
- * O Facturas
- * P Sándwiches
- * Q Promo 39
- * R Fast Food
- *
- ********************************************************/
-
-function normalizarRegistro(fila) {
-
-  return {
-
-    fecha:
-      fila.fecha ??
-      fila.Fecha ??
-      fila.A ??
-      '',
-
-    planilla:
-      fila.planilla ??
-      fila.Planilla ??
-      fila.B ??
-      '',
-
-    turno:
-      fila.turno ??
-      fila.Turno ??
-      fila.C ??
-      '',
-
-    playero1:
-      fila.cajero1 ??
-      fila.Cajero1 ??
-      fila.playero1 ??
-      fila.D ??
-      '',
-
-    playero2:
-      fila.cajero2 ??
-      fila.Cajero2 ??
-      fila.playero2 ??
-      fila.E ??
-      '',
-
-    ventaTotal: numero(
-      fila.ventaTotal ??
-      fila['Venta Total'] ??
-      fila.F ??
-      0
-    ),
-
-    shellBox: numero(
-      fila.shellBox ??
-      fila['Shell Box'] ??
-      fila.G ??
-      0
-    ),
-
-    mercadoPago: numero(
-      fila.mercadoPago ??
-      fila['Mercado Pago'] ??
-      fila.H ??
-      0
-    ),
-
-    ctasCtes: numero(
-      fila.ctasCtes ??
-      fila['Ctas/Ctes'] ??
-      fila.I ??
-      0
-    ),
-
-    tarjetas: numero(
-      fila.tarjetas ??
-      fila.Tarjetas ??
-      fila.J ??
-      0
-    ),
-
-    gastos: numero(
-      fila.gastos ??
-      fila.Gastos ??
-      fila.K ??
-      0
-    ),
-
-    recaudado: numero(
-      fila.recaudado ??
-      fila.Recaudado ??
-      fila.L ??
-      0
-    ),
-
-    diferencia: numero(
-      fila.diferencia ??
-      fila.Diferencia ??
-      fila.M ??
-      0
-    ),
-
-    cafes: numero(
-      fila.cafes ??
-      fila.Cafes ??
-      fila['Cafés'] ??
-      fila.N ??
-      0
-    ),
-
-    facturas: numero(
-      fila.facturas ??
-      fila.Facturas ??
-      fila.O ??
-      0
-    ),
-
-    sandwiches: numero(
-      fila.sandwiches ??
-      fila.Sandwiches ??
-      fila['Sándwiches'] ??
-      fila.P ??
-      0
-    ),
-
-    promo39: numero(
-      fila.promo39 ??
-      fila['Promo 39'] ??
-      fila.Q ??
-      0
-    ),
-
-    fastFood: numero(
-      fila.fastFood ??
-      fila.fastfood ??
-      fila['Fast Food'] ??
-      fila.R ??
-      0
-    )
-
-  };
-
-}
-
-
-/********************************************************
- * MESES DISPONIBLES
- ********************************************************/
-
-function actualizarMesesDisponibles() {
-
-  const meses = new Set();
-
-  todosLosRegistros.forEach(registro => {
-
-    const mes = claveMes(registro.fecha);
-
-    if (mes) {
-      meses.add(mes);
-    }
-
-  });
-
-
-  mesesDisponibles = Array.from(meses)
-    .sort()
-    .reverse();
-
-
-  console.log(
-    'Meses disponibles:',
-    mesesDisponibles
-  );
-
-}
-
-
-/********************************************************
- * CAMBIAR VISTA
- ********************************************************/
-
-function cambiarVista(modo) {
-
-  modoVista = modo;
-
-
-  document
-    .getElementById('btn-curso')
-    .classList.toggle(
-      'active',
-      modo === 'curso'
-    );
-
-
-  document
-    .getElementById('btn-historico')
-    .classList.toggle(
-      'active',
-      modo === 'historico'
-    );
-
-
-  renderizarVistaActual();
-
-}
-
-
-/********************************************************
- * RENDERIZAR
- ********************************************************/
-
-function renderizarVistaActual() {
-
-  if (!todosLosRegistros.length) return;
-
-
-  const fechaActual = new Date();
-
-  const mesActual = claveMes(fechaActual);
-
-
-  let registrosMostrar = [];
-
-  let tituloMes = '';
-
-
-  if (modoVista === 'curso') {
-
-    registrosMostrar =
-      todosLosRegistros.filter(
-        r => claveMes(r.fecha) === mesActual
-      );
-
-    tituloMes =
-      nombreMes(mesActual);
-
-
-  } else {
-
-    // Histórico:
-    // muestra el último mes anterior disponible.
-
-    let mesesHistoricos =
-      mesesDisponibles.filter(
-        mes => mes !== mesActual
-      );
-
-
-    if (!mesHistoricoSeleccionado) {
-
-      mesHistoricoSeleccionado =
-        mesesHistoricos[0] || mesesDisponibles[0];
-
-    }
-
-
-    registrosMostrar =
-      todosLosRegistros.filter(
-        r =>
-          claveMes(r.fecha) ===
-          mesHistoricoSeleccionado
-      );
-
-
-    tituloMes =
-      nombreMes(
-        mesHistoricoSeleccionado
-      );
-
-  }
-
-
-  document.getElementById('info-banner').innerText =
-    `Mostrando: ${tituloMes} | ${registrosMostrar.length} registros cargados`;
-
-
-  procesarVentasGenerales(
-    registrosMostrar,
-    tituloMes
-  );
-
-
-  procesarUnidadesSelect(
-    registrosMostrar
-  );
-
-}
-
-
-/********************************************************
- * VENTAS GENERALES
- ********************************************************/
-
-function procesarVentasGenerales(
-  registros,
-  tituloMes
-) {
-
-  if (!registros.length) {
-
-    document.getElementById('kpi-acum-venta').innerText =
-      formatoMoneda(0);
-
-    return;
-  }
-
-
-  let ventaTotal = 0;
-  let shellBox = 0;
-  let tarjetas = 0;
-  let ctasCtes = 0;
-  let mercadoPago = 0;
-
-
-  registros.forEach(fila => {
-
-    ventaTotal += numero(
-      fila.ventaTotal
-    );
-
-    shellBox += numero(
-      fila.shellBox
-    );
-
-    tarjetas += numero(
-      fila.tarjetas
-    );
-
-    ctasCtes += numero(
-      fila.ctasCtes
-    );
-
-    mercadoPago += numero(
-      fila.mercadoPago
-    );
-
-  });
-
-
-  const fechasUnicas = new Set(
-    registros.map(
-      r => formatoFecha(r.fecha)
-    )
-  );
-
-
-  const diasRegistrados =
-    fechasUnicas.size || 1;
-
-
-  const fechaMes =
-    obtenerFecha(registros[0].fecha);
-
-
-  const diasDelMes =
-    fechaMes
-      ? new Date(
-          fechaMes.getFullYear(),
-          fechaMes.getMonth() + 1,
-          0
-        ).getDate()
-      : 30;
-
-
-  let proyeccionVenta = ventaTotal;
-
-
-  if (modoVista === 'curso') {
-
-    proyeccionVenta =
-      (ventaTotal / diasRegistrados)
-      * diasDelMes;
-
-  }
-
-
-  document.getElementById('kpi-proy-venta').innerText =
-    formatoMoneda(proyeccionVenta);
-
-
-  document.getElementById('kpi-acum-venta').innerText =
-    formatoMoneda(ventaTotal);
-
-
-  document.getElementById('kpi-prom-venta').innerText =
-    formatoMoneda(
-      ventaTotal / diasRegistrados
-    );
-
-
-  document.getElementById('kpi-shellbox').innerText =
-    formatoMoneda(shellBox);
-
-
-  document.getElementById('kpi-tarjetas').innerText =
-    formatoMoneda(tarjetas);
-
-
-  document.getElementById('kpi-ctas').innerText =
-    formatoMoneda(ctasCtes);
-
-
-  document.getElementById('kpi-mp').innerText =
-    formatoMoneda(mercadoPago);
-
-
-  procesarGraficoVentas(
-    registros
-  );
-
-
-  procesarRankingShellBox(
-    registros
-  );
-
-}
-
-
-/********************************************************
- * GRÁFICO VENTAS
- ********************************************************/
-
-function procesarGraficoVentas(
-  registros
-) {
-
-  const ventasPorFecha = {};
-
-
-  registros.forEach(fila => {
-
-    const fecha =
-      formatoFecha(fila.fecha);
-
-
-    if (!ventasPorFecha[fecha]) {
-      ventasPorFecha[fecha] = 0;
-    }
-
-
-    ventasPorFecha[fecha] +=
-      numero(fila.ventaTotal);
-
-  });
-
-
-  const ordenadas =
-    Object.entries(ventasPorFecha)
-      .sort(
-        (a, b) =>
-          obtenerFecha(a[0]) -
-          obtenerFecha(b[0])
-      );
-
-
-  const labels =
-    ordenadas.map(x => x[0]);
-
-
-  const valores =
-    ordenadas.map(x => x[1]);
-
-
-  document.getElementById('chart-title').innerText =
-    `EVOLUCIÓN DE VENTAS - ${modoVista === 'curso' ? 'MES EN CURSO' : 'HISTÓRICO'}`;
-
-
-  actualizarGrafico(
-    labels,
-    valores
-  );
-
-}
-
-
-/********************************************************
- * ACTUALIZAR GRÁFICO
- ********************************************************/
-
-function actualizarGrafico(
-  labels,
-  data
-) {
-
-  const canvas =
-    document.getElementById('chartVentas');
-
-
-  if (!canvas) return;
-
-
-  const ctx =
-    canvas.getContext('2d');
-
-
-  if (chartVentasInstance) {
-
-    chartVentasInstance.destroy();
-
-  }
-
-
-  chartVentasInstance =
-    new Chart(ctx, {
-
-      type: 'line',
-
-      data: {
-
-        labels: labels,
-
-        datasets: [
-          {
-
-            data: data,
-
-            borderColor:
-              '#ff9900',
-
-            backgroundColor:
-              'rgba(255,153,0,0.15)',
-
-            borderWidth: 2,
-
-            pointRadius: 4,
-
-            tension: 0.3,
-
-            fill: true
-
-          }
-        ]
-
-      },
-
-      options: {
-
-        responsive: true,
-
-        maintainAspectRatio: false,
-
-        plugins: {
-
-          legend: {
-            display: false
-          }
-
-        },
-
-        scales: {
-
-          x: {
-
-            grid: {
-              color: '#1a2333'
-            },
-
-            ticks: {
-              color: '#8a99ad',
-              font: {
-                size: 10
-              }
-            }
-
-          },
-
-          y: {
-
-            grid: {
-              color: '#1a2333'
-            },
-
-            ticks: {
-
-              color: '#8a99ad',
-
-              callback: function(valor) {
-
-                return '$ ' +
-                  Number(valor)
-                    .toLocaleString(
-                      'es-AR'
-                    );
-
-              }
-
-            },
-
-            min: 0
-
-          }
-
-        }
-
-      }
-
+  <script>
+    /********************************************************
+     * CONFIGURACIÓN & VARIABLES
+     ********************************************************/
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45l4j-Z5Weu8IHSburGfBN1pYRBPPjGAn6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
+    const ACTUALIZAR_CADA_MS = 60000;
+
+    let chartVentasInstance = null;
+    let modoVista = 'curso';
+    let todosLosRegistros = [];
+    let mesesDisponibles = [];
+    let mesHistoricoSeleccionado = '';
+
+    /********************************************************
+     * INICIALIZACIÓN
+     ********************************************************/
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarDatos();
+      setInterval(cargarDatos, ACTUALIZAR_CADA_MS);
     });
 
-}
+    /********************************************************
+     * FORMATEADORES
+     ********************************************************/
+    function numero(valor) {
+      if (valor === null || valor === undefined || valor === '') return 0;
+      if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
 
+      let texto = String(valor).trim().replace(/\$/g, '').replace(/\s/g, '');
+      if (texto.includes(',') && texto.includes('.')) {
+        texto = texto.replace(/\./g, '').replace(',', '.');
+      } else if (texto.includes(',')) {
+        texto = texto.replace(',', '.');
+      }
+      const resultado = Number(texto);
+      return isNaN(resultado) ? 0 : resultado;
+    }
 
-/********************************************************
- * RANKING SHELL BOX
- ********************************************************/
-
-function procesarRankingShellBox(
-  registros
-) {
-
-  const ranking = {};
-
-
-  registros.forEach(fila => {
-
-    const cajeros = [];
-
-
-    if (fila.playero1) {
-
-      cajeros.push({
-        nombre: fila.playero1.trim(),
-        turno: fila.turno
+    function formatoMoneda(valor) {
+      return numero(valor).toLocaleString('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        maximumFractionDigits: 0
       });
-
     }
 
-
-    if (fila.playero2) {
-
-      cajeros.push({
-        nombre: fila.playero2.trim(),
-        turno: fila.turno
-      });
-
+    function formatoNumero(valor) {
+      return Math.round(numero(valor)).toLocaleString('es-AR');
     }
 
+    /********************************************************
+     * FECHAS & FILTRADO DE DÍA CERRADO
+     ********************************************************/
+    function obtenerFecha(fecha) {
+      if (!fecha) return null;
+      if (fecha instanceof Date) return fecha;
 
-    if (!cajeros.length) return;
-
-
-    const valor =
-      numero(fila.shellBox)
-      / cajeros.length;
-
-
-    cajeros.forEach(cajero => {
-
-      if (!ranking[cajero.nombre]) {
-
-        ranking[cajero.nombre] = {
-
-          total: 0,
-          dias: new Set(),
-          manana: 0,
-          tarde: 0
-
-        };
-
+      const texto = String(fecha).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(texto)) {
+        const partes = texto.substring(0, 10).split('-');
+        return new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+      }
+      if (/^\d{2}\/\d{2}\/\d{4}/.test(texto)) {
+        const partes = texto.substring(0, 10).split('/');
+        return new Date(Number(partes[2]), Number(partes[1]) - 1, Number(partes[0]));
+      }
+      if (/^\d{2}-\d{2}-\d{4}/.test(texto)) {
+        const partes = texto.substring(0, 10).split('-');
+        return new Date(Number(partes[2]), Number(partes[1]) - 1, Number(partes[0]));
       }
 
-
-      ranking[cajero.nombre].total +=
-        valor;
-
-
-      ranking[cajero.nombre]
-        .dias.add(
-          formatoFecha(fila.fecha)
-        );
-
-
-      const turno =
-        String(
-          cajero.turno || ''
-        ).toLowerCase();
-
-
-      if (
-        turno.includes('mañana') ||
-        turno.includes('manana')
-      ) {
-
-        ranking[cajero.nombre].manana++;
-
-      }
-      else if (
-        turno.includes('tarde')
-      ) {
-
-        ranking[cajero.nombre].tarde++;
-
-      }
-
-    });
-
-  });
-
-
-  const lista =
-    Object.entries(ranking)
-      .map(
-        ([nombre, datos]) => ({
-          nombre,
-          total: datos.total,
-          dias: datos.dias.size,
-          manana: datos.manana,
-          tarde: datos.tarde
-        })
-      )
-      .sort(
-        (a, b) =>
-          b.total - a.total
-      );
-
-
-  const contenedor =
-    document.getElementById(
-      'ranking-shellbox'
-    );
-
-
-  contenedor.innerHTML = '';
-
-
-  lista.forEach(
-    (item, indice) => {
-
-      const promedio =
-        item.total /
-        (item.dias || 1);
-
-
-      const div =
-        document.createElement(
-          'div'
-        );
-
-
-      div.className =
-        'ranking-row';
-
-
-      div.innerHTML = `
-
-        <div class="ranking-user">
-
-          <span class="ranking-num">
-            ${indice + 1}.
-          </span>
-
-          <span class="ranking-name">
-            ${item.nombre}
-          </span>
-
-          <span class="ranking-metrics">
-            (M: ${item.manana} / T: ${item.tarde}
-            | Prom:
-            ${formatoMoneda(promedio)}/día)
-          </span>
-
-        </div>
-
-        <span class="ranking-val">
-          ${formatoMoneda(item.total)}
-        </span>
-
-      `;
-
-
-      contenedor.appendChild(div);
-
+      const fechaNueva = new Date(texto);
+      return isNaN(fechaNueva.getTime()) ? null : fechaNueva;
     }
-  );
 
-
-  document.getElementById(
-    'ranking-title'
-  ).innerText =
-    'RANKING (SHELL BOX X PERSONAL)';
-
-}
-
-
-/********************************************************
- * PROCESAR UNIDADES SELECT
- ********************************************************/
-
-function procesarUnidadesSelect(
-  registros
-) {
-
-  const acumulados = {
-
-    cafes: 0,
-
-    facturas: 0,
-
-    sandwiches: 0,
-
-    promo39: 0,
-
-    fastfood: 0
-
-  };
-
-
-  const rankingCajeros = {};
-
-
-  const tbodyJornadas =
-    document.getElementById(
-      'tbody-jornadas'
-    );
-
-
-  tbodyJornadas.innerHTML = '';
-
-
-  registros
-    .sort(
-      (a, b) =>
-        obtenerFecha(a.fecha) -
-        obtenerFecha(b.fecha)
-    )
-    .forEach(fila => {
-
-
-      const c =
-        numero(fila.cafes);
-
-
-      const fac =
-        numero(fila.facturas);
-
-
-      const s =
-        numero(fila.sandwiches);
-
-
-      const p =
-        numero(fila.promo39);
-
-
-      const ff =
-        numero(fila.fastFood);
-
-
-      const tr =
-        document.createElement('tr');
-
-
-      tr.innerHTML = `
-
-        <td>
-          ${formatoFecha(fila.fecha)}
-        </td>
-
-        <td>
-          <span class="badge-turno">
-            ${fila.turno || '—'}
-          </span>
-        </td>
-
-        <td>
-          <b>
-            ${fila.playero1 || '—'}
-          </b>
-        </td>
-
-        <td>
-          ${fila.playero2 || '—'}
-        </td>
-
-        <td>${formatoNumero(c)}</td>
-
-        <td>${formatoNumero(fac)}</td>
-
-        <td>${formatoNumero(s)}</td>
-
-        <td>${formatoNumero(p)}</td>
-
-        <td>${formatoNumero(ff)}</td>
-
-      `;
-
-
-      tbodyJornadas
-        .appendChild(tr);
-
-
-      acumulados.cafes += c;
-
-      acumulados.facturas += fac;
-
-      acumulados.sandwiches += s;
-
-      acumulados.promo39 += p;
-
-      acumulados.fastfood += ff;
-
-
-      const cajeros = [];
-
-
-      if (
-        fila.playero1 &&
-        fila.playero1 !== '—'
-      ) {
-
-        cajeros.push(
-          fila.playero1.trim()
-        );
-
-      }
-
-
-      if (
-        fila.playero2 &&
-        fila.playero2 !== '—'
-      ) {
-
-        cajeros.push(
-          fila.playero2.trim()
-        );
-
-      }
-
-
-      if (cajeros.length > 0) {
-
-        const factor =
-          1 / cajeros.length;
-
-
-        cajeros.forEach(caj => {
-
-
-          if (!rankingCajeros[caj]) {
-
-            rankingCajeros[caj] = {
-
-              cafes: 0,
-
-              facturas: 0,
-
-              sandwiches: 0,
-
-              promo39: 0,
-
-              fastfood: 0
-
-            };
-
-          }
-
-
-          rankingCajeros[caj].cafes +=
-            c * factor;
-
-
-          rankingCajeros[caj].facturas +=
-            fac * factor;
-
-
-          rankingCajeros[caj].sandwiches +=
-            s * factor;
-
-
-          rankingCajeros[caj].promo39 +=
-            p * factor;
-
-
-          rankingCajeros[caj].fastfood +=
-            ff * factor;
-
+    function claveMes(fecha) {
+      const d = obtenerFecha(fecha);
+      if (!d) return '';
+      const anio = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      return `${anio}-${mes}`;
+    }
+
+    function nombreMes(clave) {
+      if (!clave) return '';
+      const partes = clave.split('-');
+      const anio = Number(partes[0]);
+      const mes = Number(partes[1]) - 1;
+      const nombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      return `${nombres[mes]} ${anio}`;
+    }
+
+    function formatoFecha(fecha) {
+      const d = obtenerFecha(fecha);
+      if (!d) return fecha || '—';
+      return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    /********************************************************
+     * CARGA Y NORMALIZACIÓN DE DATOS (DÍA CERRADO)
+     ********************************************************/
+    async function cargarDatos() {
+      try {
+        const respuesta = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), {
+          method: 'GET',
+          redirect: 'follow'
         });
 
+        if (!respuesta.ok) throw new Error('Error HTTP: ' + respuesta.status);
+
+        const json = await respuesta.json();
+        let registros = Array.isArray(json) ? json : (json.registros || json.data || json.datos || []);
+
+        // Filtrar y normalizar
+        todosLosRegistros = registros
+          .map(normalizarRegistro)
+          .filter(r => r !== null);
+
+        if (todosLosRegistros.length === 0) {
+          document.getElementById('info-banner').innerText = 'No se encontraron registros de días cerrados.';
+          return;
+        }
+
+        actualizarMesesDisponibles();
+        renderizarVistaActual();
+
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+        document.getElementById('info-banner').innerText = 'Error al conectar con los datos';
       }
-
-    });
-
-
-  const fechasUnicas =
-    new Set(
-      registros.map(
-        r => formatoFecha(r.fecha)
-      )
-    );
-
-
-  const diasRegistrados =
-    fechasUnicas.size || 1;
-
-
-  let diasDelMes =
-    diasRegistrados;
-
-
-  if (
-    modoVista === 'curso' &&
-    registros.length
-  ) {
-
-    const fecha =
-      obtenerFecha(
-        registros[0].fecha
-      );
-
-
-    if (fecha) {
-
-      diasDelMes =
-        new Date(
-          fecha.getFullYear(),
-          fecha.getMonth() + 1,
-          0
-        ).getDate();
-
     }
 
-  }
+    function normalizarRegistro(fila) {
+      const fechaObj = obtenerFecha(fila.fecha ?? fila.Fecha ?? fila.A);
+      if (!fechaObj) return null;
 
+      // REGLA CRÍTICA: FILTRAR HASTA EL DÍA ANTERIOR (DÍA CERRADO)
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      
+      const fechaEval = new Date(fechaObj.getTime());
+      fechaEval.setHours(0, 0, 0, 0);
 
-  const factorProyeccion =
-    modoVista === 'curso'
-      ? diasDelMes /
-        diasRegistrados
-      : 1;
+      // Si la fecha es igual o posterior a hoy, o no tiene venta registrada, se descarta
+      const vtaTotal = numero(fila.ventaTotal ?? fila['Venta Total'] ?? fila.F ?? 0);
+      if (fechaEval >= hoy) return null;
 
-
-  const kpis = [
-    'cafes',
-    'facturas',
-    'sandwiches',
-    'promo39',
-    'fastfood'
-  ];
-
-
-  kpis.forEach(kpi => {
-
-
-    const total =
-      acumulados[kpi];
-
-
-    const promedio =
-      total /
-      diasRegistrados;
-
-
-    const proyeccion =
-      modoVista === 'curso'
-        ? total *
-          factorProyeccion
-        : total;
-
-
-    const elProy =
-      document.getElementById(
-        `kpi-${kpi}-proy`
-      );
-
-
-    const elAcum =
-      document.getElementById(
-        `kpi-${kpi}-acum`
-      );
-
-
-    const elProm =
-      document.getElementById(
-        `kpi-${kpi}-prom`
-      );
-
-
-    if (elProy) {
-
-      elProy.innerText =
-        formatoNumero(
-          proyeccion
-        );
-
+      return {
+        fecha: fechaObj,
+        planilla: fila.planilla ?? fila.Planilla ?? fila.B ?? '',
+        turno: fila.turno ?? fila.Turno ?? fila.C ?? '',
+        playero1: fila.cajero1 ?? fila.Cajero1 ?? fila.playero1 ?? fila.D ?? '',
+        playero2: fila.cajero2 ?? fila.Cajero2 ?? fila.playero2 ?? fila.E ?? '',
+        ventaTotal: vtaTotal,
+        shellBox: numero(fila.shellBox ?? fila['Shell Box'] ?? fila.G ?? 0),
+        mercadoPago: numero(fila.mercadoPago ?? fila['Mercado Pago'] ?? fila.H ?? 0),
+        ctasCtes: numero(fila.ctasCtes ?? fila['Ctas/Ctes'] ?? fila.I ?? 0),
+        tarjetas: numero(fila.tarjetas ?? fila.Tarjetas ?? fila.J ?? 0),
+        gastos: numero(fila.gastos ?? fila.Gastos ?? fila.K ?? 0),
+        recaudado: numero(fila.recaudado ?? fila.Recaudado ?? fila.L ?? 0),
+        diferencia: numero(fila.diferencia ?? fila.Diferencia ?? fila.M ?? 0),
+        cafes: numero(fila.cafes ?? fila.Cafes ?? fila['Cafés'] ?? fila.N ?? 0),
+        facturas: numero(fila.facturas ?? fila.Facturas ?? fila.O ?? 0),
+        sandwiches: numero(fila.sandwiches ?? fila.Sandwiches ?? fila['Sándwiches'] ?? fila.P ?? 0),
+        promo39: numero(fila.promo39 ?? fila['Promo 39'] ?? fila.Q ?? 0),
+        fastFood: numero(fila.fastFood ?? fila.fastfood ?? fila['Fast Food'] ?? fila.R ?? 0)
+      };
     }
 
-
-    if (elAcum) {
-
-      elAcum.innerText =
-        formatoNumero(
-          total
-        );
-
+    /********************************************************
+     * CONTROL DE VISTAS Y RENDERS
+     ********************************************************/
+    function actualizarMesesDisponibles() {
+      const meses = new Set();
+      todosLosRegistros.forEach(r => {
+        const m = claveMes(r.fecha);
+        if (m) meses.add(m);
+      });
+      mesesDisponibles = Array.from(meses).sort().reverse();
     }
 
-
-    if (elProm) {
-
-      elProm.innerText =
-        promedio.toFixed(1);
-
-    }
-
-  });
-
-
-  renderizarTablaCajeros(
-    rankingCajeros
-  );
-
-
-  document.getElementById(
-    'tabla-cajeros-title'
-  ).innerText =
-    `ACUMULADO POR CAJERO - ${modoVista === 'curso' ? 'MES EN CURSO' : 'HISTÓRICO'}`;
-
-}
-
-
-/********************************************************
- * TABLA CAJEROS
- ********************************************************/
-
-function renderizarTablaCajeros(
-  rankingCajeros
-) {
-
-  const tbody =
-    document.getElementById(
-      'tbody-cajeros'
-    );
-
-
-  tbody.innerHTML = '';
-
-
-  Object
-    .keys(rankingCajeros)
-    .sort()
-    .forEach(caj => {
-
-
-      const d =
-        rankingCajeros[caj];
-
-
-      const total =
-        d.cafes +
-        d.facturas +
-        d.sandwiches +
-        d.promo39 +
-        d.fastfood;
-
-
-      const tr =
-        document.createElement(
-          'tr'
-        );
-
-
-      tr.innerHTML = `
-
-        <td>
-          <b>${caj}</b>
-        </td>
-
-        <td>
-          ${formatoNumero(d.cafes)}
-        </td>
-
-        <td>
-          ${formatoNumero(d.facturas)}
-        </td>
-
-        <td>
-          ${formatoNumero(d.sandwiches)}
-        </td>
-
-        <td>
-          ${formatoNumero(d.promo39)}
-        </td>
-
-        <td>
-          ${formatoNumero(d.fastfood)}
-        </td>
-
-        <td style="
-          color: var(--accent-cyan);
-          font-weight: bold;
-        ">
-          ${formatoNumero(total)}
-        </td>
-
-      `;
-
-
-      tbody.appendChild(tr);
-
-    });
-
-}
-
-
-/********************************************************
- * ACTUALIZACIÓN AUTOMÁTICA
- ********************************************************/
-
-document.addEventListener(
-  'DOMContentLoaded',
-  () => {
-
-    cargarDatos();
-
-
-    setInterval(
-      cargarDatos,
-      ACTUALIZAR_CADA_MS
-    );
-
-  }
-);
-
-    // Cambiar entre vista Curso e Histórico
     function cambiarVista(modo) {
       modoVista = modo;
       document.getElementById('btn-curso').classList.toggle('active', modo === 'curso');
       document.getElementById('btn-historico').classList.toggle('active', modo === 'historico');
-
-      const infoBanner = document.getElementById('info-banner');
-      if (modo === 'curso') {
-        infoBanner.innerText = 'Mostrando: Mes en Curso (2026-09) - Solo días cerrados';
-        actualizarGrafico(['01-09-2026', '02-09-2026', '03-09-2026', '04-09-2026', '05-09-2026', '06-09-2026', '07-09-2026'], [2650000, 3050000, 3250000, 2900000, 1680000, 380000, 1100000]);
-        procesarUnidadesSelect(datosMesCurso);
-      } else {
-        infoBanner.innerText = 'Mostrando: Histórico Consolidado (Meses Anteriores)';
-        actualizarGrafico(['Mayo 2026', 'Junio 2026', 'Julio 2026', 'Agosto 2026'], [54000000, 58200000, 61500000, 63800000]);
-        procesarUnidadesSelect(datosHistorico);
-      }
+      renderizarVistaActual();
     }
 
-    // Actualizar o crear gráfico
-    function actualizarGrafico(labels, data) {
-      const ctx = document.getElementById('chartVentas').getContext('2d');
-      if (chartVentasInstance) {
-        chartVentasInstance.destroy();
+    function renderizarVistaActual() {
+      if (!todosLosRegistros.length) return;
+
+      const hoy = new Date();
+      const mesActualKey = claveMes(hoy);
+
+      let registrosMostrar = [];
+      let tituloMes = '';
+
+      if (modoVista === 'curso') {
+        registrosMostrar = todosLosRegistros.filter(r => claveMes(r.fecha) === mesActualKey);
+        tituloMes = nombreMes(mesActualKey);
+      } else {
+        let mesesHistoricos = mesesDisponibles.filter(m => m !== mesActualKey);
+        if (!mesHistoricoSeleccionado) {
+          mesHistoricoSeleccionado = mesesHistoricos[0] || mesesDisponibles[0];
+        }
+        registrosMostrar = todosLosRegistros.filter(r => claveMes(r.fecha) === mesHistoricoSeleccionado);
+        tituloMes = nombreMes(mesHistoricoSeleccionado);
       }
+
+      // Conteo real de días auditados
+      const diasAuditados = new Set(registrosMostrar.map(r => formatoFecha(r.fecha))).size;
+
+      document.getElementById('info-banner').innerText = 
+        `Mostrando: ${tituloMes} | ${diasAuditados} días cerrados auditados (${registrosMostrar.length} turnos procesados)`;
+
+      procesarVentasGenerales(registrosMostrar);
+      procesarUnidadesSelect(registrosMostrar);
+    }
+
+    /********************************************************
+     * PROCESAMIENTO VENTAS & KPIS MONETARIOS
+     ********************************************************/
+    function procesarVentasGenerales(registros) {
+      if (!registros.length) {
+        document.getElementById('kpi-proy-venta').innerText = formatoMoneda(0);
+        document.getElementById('kpi-acum-venta').innerText = formatoMoneda(0);
+        document.getElementById('kpi-prom-venta').innerText = formatoMoneda(0);
+        return;
+      }
+
+      let ventaTotal = 0, shellBox = 0, tarjetas = 0, ctasCtes = 0, mercadoPago = 0;
+
+      registros.forEach(fila => {
+        ventaTotal += fila.ventaTotal;
+        shellBox += fila.shellBox;
+        tarjetas += fila.tarjetas;
+        ctasCtes += fila.ctasCtes;
+        mercadoPago += fila.mercadoPago;
+      });
+
+      const fechasUnicas = new Set(registros.map(r => formatoFecha(r.fecha)));
+      const diasRegistrados = fechasUnicas.size || 1;
+
+      // Obtener días totales del mes consultado
+      const refFecha = registros[0].fecha;
+      const diasDelMes = new Date(refFecha.getFullYear(), refFecha.getMonth() + 1, 0).getDate();
+
+      const promedioDiario = ventaTotal / diasRegistrados;
+      const proyeccionVenta = modoVista === 'curso' ? (promedioDiario * diasDelMes) : ventaTotal;
+
+      document.getElementById('kpi-proy-venta').innerText = formatoMoneda(proyeccionVenta);
+      document.getElementById('kpi-acum-venta').innerText = formatoMoneda(ventaTotal);
+      document.getElementById('kpi-prom-venta').innerText = formatoMoneda(promedioDiario);
+
+      document.getElementById('kpi-shellbox').innerText = formatoMoneda(shellBox);
+      document.getElementById('kpi-tarjetas').innerText = formatoMoneda(tarjetas);
+      document.getElementById('kpi-ctas').innerText = formatoMoneda(ctasCtes);
+      document.getElementById('kpi-mp').innerText = formatoMoneda(mercadoPago);
+
+      procesarGraficoVentas(registros);
+      procesarRankingShellBox(registros);
+    }
+
+    /********************************************************
+     * GRÁFICO DE VENTAS
+     ********************************************************/
+    function procesarGraficoVentas(registros) {
+      const ventasPorFecha = {};
+
+      registros.forEach(fila => {
+        const fechaStr = formatoFecha(fila.fecha);
+        ventasPorFecha[fechaStr] = (ventasPorFecha[fechaStr] || 0) + fila.ventaTotal;
+      });
+
+      const ordenadas = Object.entries(ventasPorFecha).sort((a, b) => obtenerFecha(a[0]) - obtenerFecha(b[0]));
+      const labels = ordenadas.map(x => x[0]);
+      const valores = ordenadas.map(x => x[1]);
+
+      document.getElementById('chart-title').innerText = 
+        `EVOLUCIÓN DE VENTAS DIARIAS (${modoVista === 'curso' ? 'MES EN CURSO - DÍAS CERRADOS' : 'HISTÓRICO'})`;
+
+      actualizarGrafico(labels, valores);
+    }
+
+    function actualizarGrafico(labels, data) {
+      const canvas = document.getElementById('chartVentas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (chartVentasInstance) chartVentasInstance.destroy();
 
       chartVentasInstance = new Chart(ctx, {
         type: 'line',
@@ -1988,10 +693,11 @@ document.addEventListener(
           datasets: [{
             data: data,
             borderColor: '#ff9900',
-            backgroundColor: '#ff9900',
+            backgroundColor: 'rgba(255,153,0,0.15)',
             borderWidth: 2,
             pointRadius: 4,
-            tension: 0.3
+            tension: 0.3,
+            fill: true
           }]
         },
         options: {
@@ -1999,118 +705,184 @@ document.addEventListener(
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { color: '#1a2333' }, ticks: { color: '#8a99ad', font: { size: 10 } } },
-            y: { grid: { color: '#1a2333' }, ticks: { color: '#8a99ad' }, min: 0 }
+            x: {
+              grid: { color: '#1a2333' },
+              ticks: { color: '#8a99ad', font: { size: 10 } }
+            },
+            y: {
+              grid: { color: '#1a2333' },
+              ticks: {
+                color: '#8a99ad',
+                callback: (v) => '$ ' + Number(v).toLocaleString('es-AR')
+              },
+              min: 0
+            }
           }
         }
       });
     }
 
-    // Procesar datos de unidades, KPIs y tablas
+    /********************************************************
+     * RANKING SHELL BOX
+     ********************************************************/
+    function procesarRankingShellBox(registros) {
+      const ranking = {};
+
+      registros.forEach(fila => {
+        const cajeros = [];
+        if (fila.playero1) cajeros.push({ nombre: fila.playero1.trim(), turno: fila.turno });
+        if (fila.playero2) cajeros.push({ nombre: fila.playero2.trim(), turno: fila.turno });
+
+        if (!cajeros.length) return;
+        const valorPorCajero = fila.shellBox / cajeros.length;
+
+        cajeros.forEach(c => {
+          if (!ranking[c.nombre]) {
+            ranking[c.nombre] = { total: 0, dias: new Set(), manana: 0, tarde: 0 };
+          }
+          ranking[c.nombre].total += valorPorCajero;
+          ranking[c.nombre].dias.add(formatoFecha(fila.fecha));
+
+          const t = String(c.turno || '').toLowerCase();
+          if (t.includes('mañana') || t.includes('manana')) ranking[c.nombre].manana++;
+          else if (t.includes('tarde')) ranking[c.nombre].tarde++;
+        });
+      });
+
+      const lista = Object.entries(ranking)
+        .map(([nombre, d]) => ({
+          nombre,
+          total: d.total,
+          dias: d.dias.size,
+          manana: d.manana,
+          tarde: d.tarde
+        }))
+        .sort((a, b) => b.total - a.total);
+
+      const contenedor = document.getElementById('ranking-shellbox');
+      contenedor.innerHTML = '';
+
+      lista.forEach((item, idx) => {
+        const promedio = item.total / (item.dias || 1);
+        const div = document.createElement('div');
+        div.className = 'ranking-row';
+        div.innerHTML = `
+          <div class="ranking-user">
+            <span class="ranking-num">${idx + 1}.</span>
+            <span class="ranking-name">${item.nombre}</span>
+            <span class="ranking-metrics">(M: ${item.manana} / T: ${item.tarde} | Prom: ${formatoMoneda(promedio)}/día)</span>
+          </div>
+          <span class="ranking-val">${formatoMoneda(item.total)}</span>
+        `;
+        contenedor.appendChild(div);
+      });
+    }
+
+    /********************************************************
+     * UNIDADES SELECT Y TABLA CAJEROS (50/50)
+     ********************************************************/
     function procesarUnidadesSelect(registros) {
-      if (!registros || registros.length === 0) return;
-
-      const hoy = new Date();
-      const mesActual = hoy.getMonth();
-      const anioActual = hoy.getFullYear();
-      const diaCerrado = hoy.getDate() - 1 || 1;
-      const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
-
-      let acumulados = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
-      let rankingCajeros = {};
+      const acumulados = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
+      const rankingCajeros = {};
 
       const tbodyJornadas = document.getElementById('tbody-jornadas');
       tbodyJornadas.innerHTML = '';
 
-      registros.forEach(fila => {
-        if (!fila.fecha) return;
+      const ordenados = [...registros].sort((a, b) => a.fecha - b.fecha);
 
-        const c = Number(fila.cafes || 0);
-        const fac = Number(fila.facturas || 0);
-        const s = Number(fila.sandwiches || 0);
-        const p = Number(fila.promo39 || 0);
-        const ff = Number(fila.fastFood || fila.fastfood || 0);
+      ordenados.forEach(fila => {
+        const c = fila.cafes, fac = fila.facturas, s = fila.sandwiches, p = fila.promo39, ff = fila.fastFood;
 
-        // Render fila detalle
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${fila.fecha}</td>
+          <td>${formatoFecha(fila.fecha)}</td>
           <td><span class="badge-turno">${fila.turno || '—'}</span></td>
           <td><b>${fila.playero1 || '—'}</b></td>
           <td>${fila.playero2 || '—'}</td>
-          <td>${c}</td>
-          <td>${fac}</td>
-          <td>${s}</td>
-          <td>${p}</td>
-          <td>${ff}</td>
+          <td>${formatoNumero(c)}</td>
+          <td>${formatoNumero(fac)}</td>
+          <td>${formatoNumero(s)}</td>
+          <td>${formatoNumero(p)}</td>
+          <td>${formatoNumero(ff)}</td>
         `;
         tbodyJornadas.appendChild(tr);
 
-        // Sumar acumulados
         acumulados.cafes += c;
         acumulados.facturas += fac;
         acumulados.sandwiches += s;
         acumulados.promo39 += p;
         acumulados.fastfood += ff;
 
-        // Reparto 50/50 por cajero
-        let cajeros = [];
-        if (fila.playero1 && fila.playero1 !== "—") cajeros.push(fila.playero1.trim());
-        if (fila.playero2 && fila.playero2 !== "—") cajeros.push(fila.playero2.trim());
+        const cajeros = [];
+        if (fila.playero1 && fila.playero1 !== '—') cajeros.push(fila.playero1.trim());
+        if (fila.playero2 && fila.playero2 !== '—') cajeros.push(fila.playero2.trim());
 
         if (cajeros.length > 0) {
           const factor = 1 / cajeros.length;
           cajeros.forEach(caj => {
-            if (!rankingCajeros[caj]) rankingCajeros[caj] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
-            rankingCajeros[caj].cafes += (c * factor);
-            rankingCajeros[caj].facturas += (fac * factor);
-            rankingCajeros[caj].sandwiches += (s * factor);
-            rankingCajeros[caj].promo39 += (p * factor);
-            rankingCajeros[caj].fastfood += (ff * factor);
+            if (!rankingCajeros[caj]) {
+              rankingCajeros[caj] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
+            }
+            rankingCajeros[caj].cafes += c * factor;
+            rankingCajeros[caj].facturas += fac * factor;
+            rankingCajeros[caj].sandwiches += s * factor;
+            rankingCajeros[caj].promo39 += p * factor;
+            rankingCajeros[caj].fastfood += ff * factor;
           });
         }
       });
 
-      // Render KPIs
-      const factorProy = (modoVista === 'curso') ? (diasEnMes / diaCerrado) : 1;
-      ['cafes', 'facturas', 'sandwiches', 'promo39', 'fastfood'].forEach(kpi => {
-        const total = acumulados[kpi];
-        const prom = (modoVista === 'curso') ? (total / diaCerrado).toFixed(1) : (total / 30).toFixed(1);
-        const proy = Math.round(total * factorProy);
+      // Días registrados únicos
+      const diasRegistrados = new Set(registros.map(r => formatoFecha(r.fecha))).size || 1;
+      const refFecha = registros.length ? registros[0].fecha : new Date();
+      const diasDelMes = new Date(refFecha.getFullYear(), refFecha.getMonth() + 1, 0).getDate();
 
-        const elProy = document.getElementById(`kpi-${kpi}-proy`);
-        const elAcum = document.getElementById(`kpi-${kpi}-acum`);
-        const elProm = document.getElementById(`kpi-${kpi}-prom`);
+      // RENDER KPIS UNIDADES
+      const renderKpiUnidad = (key, idProy, idAcum, idProm) => {
+        const acum = acumulados[key];
+        const prom = acum / diasRegistrados;
+        const proy = modoVista === 'curso' ? (prom * diasDelMes) : acum;
 
-        if (elProy) elProy.innerText = proy.toLocaleString('es-AR');
-        if (elAcum) elAcum.innerText = total.toLocaleString('es-AR');
-        if (elProm) elProm.innerText = prom;
-      });
+        document.getElementById(idProy).innerText = formatoNumero(proy);
+        document.getElementById(idAcum).innerText = formatoNumero(acum);
+        document.getElementById(idProm).innerText = prom.toFixed(1);
+      };
 
-      // Render Tabla Cajeros
+      renderKpiUnidad('cafes', 'kpi-cafes-proy', 'kpi-cafes-acum', 'kpi-cafes-prom');
+      renderKpiUnidad('facturas', 'kpi-facturas-proy', 'kpi-facturas-acum', 'kpi-facturas-prom');
+      renderKpiUnidad('sandwiches', 'kpi-sandwiches-proy', 'kpi-sandwiches-acum', 'kpi-sandwiches-prom');
+      renderKpiUnidad('promo39', 'kpi-promo39-proy', 'kpi-promo39-acum', 'kpi-promo39-prom');
+      renderKpiUnidad('fastfood', 'kpi-fastfood-proy', 'kpi-fastfood-acum', 'kpi-fastfood-prom');
+
+      // RENDER TABLA CAJEROS (50/50)
       const tbodyCajeros = document.getElementById('tbody-cajeros');
       tbodyCajeros.innerHTML = '';
-      Object.keys(rankingCajeros).sort().forEach(caj => {
-        const d = rankingCajeros[caj];
-        const total = d.cafes + d.facturas + d.sandwiches + d.promo39 + d.fastfood;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><b>${caj}</b></td>
-          <td>${Math.round(d.cafes)}</td>
-          <td>${Math.round(d.facturas)}</td>
-          <td>${Math.round(d.sandwiches)}</td>
-          <td>${Math.round(d.promo39)}</td>
-          <td>${Math.round(d.fastfood)}</td>
-          <td style="color: var(--accent-cyan); font-weight: bold;">${Math.round(total)}</td>
-        `;
-        tbodyCajeros.appendChild(tr);
-      });
-    }
 
-    // Inicializar en carga
-    document.addEventListener("DOMContentLoaded", () => {
-      cambiarVista('curso');
-    });
+      Object.entries(rankingCajeros)
+        .map(([nombre, u]) => ({
+          nombre,
+          cafes: Math.round(u.cafes),
+          facturas: Math.round(u.facturas),
+          sandwiches: Math.round(u.sandwiches),
+          promo39: Math.round(u.promo39),
+          fastfood: Math.round(u.fastfood),
+          total: Math.round(u.cafes + u.facturas + u.sandwiches + u.promo39 + u.fastfood)
+        }))
+        .sort((a, b) => b.total - a.total)
+        .forEach(caj => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><b>${caj.nombre}</b></td>
+            <td>${formatoNumero(caj.cafes)}</td>
+            <td>${formatoNumero(caj.facturas)}</td>
+            <td>${formatoNumero(caj.sandwiches)}</td>
+            <td>${formatoNumero(caj.promo39)}</td>
+            <td>${formatoNumero(caj.fastfood)}</td>
+            <td><b style="color: var(--accent-cyan);">${formatoNumero(caj.total)}</b></td>
+          `;
+          tbodyCajeros.appendChild(tr);
+        });
+    }
   </script>
 </body>
 </html>
