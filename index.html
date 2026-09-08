@@ -280,8 +280,7 @@
     </div>
   </div>
 
-  <script>
-    // URL CORREGIDA Y PROBADA CON CARACTERES EXACTOS
+<script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45I4j-Z5Weu8IHSburgFbN1pYRBPJGaN6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
 
     let datosGlobales = [];
@@ -290,7 +289,15 @@
 
     async function cargarDatos() {
       try {
-        const response = await fetch(APPS_SCRIPT_URL);
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error en la respuesta de la red');
+        }
+
         const json = await response.json();
 
         if (json.error) {
@@ -298,6 +305,7 @@
         }
 
         datosGlobales = json;
+        document.getElementById('errorBanner').style.display = 'none';
         renderizar();
       } catch (err) {
         console.error("Error al cargar datos:", err);
@@ -315,16 +323,19 @@
     function renderizar() {
       if (!datosGlobales.length) return;
 
-      const hoy = new Date();
-      const mesActual = (hoy.getMonth() + 1).toString().padStart(2, '0');
-      const anioActual = hoy.getFullYear().toString();
+      // Obtener el mes y año del registro más reciente en la base de datos
+      const fechasUnicas = [...new Set(datosGlobales.map(d => d.fecha).filter(Boolean))];
+      const ultimaFecha = fechasUnicas[fechasUnicas.length - 1] || "";
+      const partesUltima = ultimaFecha.split('-');
+      const mesObjetivo = partesUltima[1];
+      const anioObjetivo = partesUltima[2];
 
       let datosFiltrados = datosGlobales;
-      if (modoVista === 'actual') {
+      if (modoVista === 'actual' && mesObjetivo && anioObjetivo) {
         datosFiltrados = datosGlobales.filter(d => {
           if (!d.fecha) return false;
           const partes = d.fecha.split('-');
-          return partes[1] === mesActual && partes[2] === anioActual;
+          return partes[1] === mesObjetivo && partes[2] === anioObjetivo;
         });
       }
 
@@ -429,5 +440,3 @@
 
     cargarDatos();
   </script>
-</body>
-</html>
