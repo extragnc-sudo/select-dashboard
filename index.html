@@ -3,352 +3,364 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DASHBOARD - SELECT</title>
-  <!-- Chart.js para el gráfico de evolución -->
+  <title>Dashboard - Select</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
-      --bg-main: #0a0d14;
-      --bg-card: #111622;
-      --bg-card-border: #1a2333;
-      --text-main: #ffffff;
-      --text-muted: #8a99ad;
-      --accent-orange: #ff9900;
-      --accent-blue: #2563eb;
-      --accent-cyan: #38bdf8;
+      --bg-main: #0a0e17;
+      --bg-card: #111827;
+      --border: #1f293d;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-amber: #d97706;
+      --accent-gold: #f59e0b;
+      --accent-blue: #3b82f6;
     }
 
-    * {
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); padding: 16px; min-height: 100vh; }
 
-    body {
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      margin: 0;
-      padding: 24px;
-    }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 14px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .brand-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); letter-spacing: 0.02em; }
+    .brand-sub { font-size: 0.75rem; color: var(--text-muted); }
 
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
+    .view-selector { display: flex; gap: 8px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
+    .view-btn { border: none; background: transparent; color: var(--text-muted); padding: 6px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .view-btn.active { background: var(--accent-amber); color: #fff; }
 
-    /* HEADER PRINCIPAL */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
+    .filter-bar { background: var(--bg-card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .select-month { background: #0a0e17; color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; outline: none; cursor: pointer; }
 
-    .header-title h1 {
-      font-size: 1.4rem;
-      font-weight: 800;
-      margin: 0;
-      letter-spacing: 0.5px;
-      color: #ffffff;
-    }
+    .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+    .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; height: 110px; border-top: 3px solid var(--accent-amber); }
+    .kpi-title { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .kpi-value { font-size: 1.25rem; font-weight: 800; color: #fff; margin: 4px 0; }
+    .kpi-details { font-size: 0.7rem; color: var(--text-muted); display: flex; justify-content: space-between; }
 
-    .header-title p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin: 3px 0 0 0;
-    }
+    .dashboard-body { display: grid; grid-template-columns: 2fr 1.2fr; gap: 16px; margin-bottom: 16px; }
+    .panel-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+    .panel-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    /* BOTONES MES EN CURSO / HISTORICO */
-    .nav-toggle {
-      background: #111622;
-      border: 1px solid var(--bg-card-border);
-      border-radius: 8px;
-      padding: 4px;
-      display: flex;
-      gap: 4px;
-    }
+    .ranking-list { display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; }
+    .ranking-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; padding: 6px 0; border-bottom: 1px solid #1a2333; }
+    .ranking-name { font-weight: 600; color: var(--text-main); flex: 1; min-width: 110px; }
+    .ranking-shifts { font-size: 0.72rem; color: var(--text-muted); padding: 0 10px; font-weight: 500; text-align: right; }
+    .ranking-val { font-weight: 700; color: var(--accent-gold); white-space: nowrap; }
 
-    .btn-toggle {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .btn-toggle.active {
-      background: var(--accent-orange);
-      color: #000000;
-      font-weight: 700;
-    }
-
-    /* BANNER MOSTRANDO */
-    .info-bar {
-      background: var(--bg-card);
-      border: 1px solid var(--bg-card-border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 20px;
-    }
-
-    /* GRID TARJETAS KPIS */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .kpi-card {
-      background: var(--bg-card);
-      border: 1px solid var(--bg-card-border);
-      border-radius: 10px;
-      padding: 16px;
-      position: relative;
-    }
-
-    .kpi-card-title {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
-    }
-
-    .kpi-card-value {
-      font-size: 1.6rem;
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .val-white { color: #ffffff; }
-    .val-orange { color: var(--accent-orange); }
-    .val-blue { color: #3b82f6; }
-
-    .kpi-card-sub {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .kpi-card-sub span {
-      color: #ffffff;
-      font-weight: 700;
-    }
-
-    /* GRID DE CONTENIDO PRINCIPAL (GRÁFICO + RANKING) */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 20px;
-    }
-
-    .panel-box {
-      background: var(--bg-card);
-      border: 1px solid var(--bg-card-border);
-      border-radius: 10px;
-      padding: 20px;
-      min-height: 380px;
-    }
-
-    .panel-box h3 {
-      font-size: 0.85rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin: 0 0 20px 0;
-      color: #ffffff;
-    }
-
-    /* RANKING HORIZONTAL */
-    .ranking-container {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .ranking-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
-    }
-
-    .ranking-num {
-      font-weight: 800;
-      color: #ffffff;
-    }
-
-    .ranking-name {
-      color: #ffffff;
-      font-weight: 600;
-    }
-
-    .ranking-val {
-      color: var(--accent-orange);
-      font-weight: 800;
-    }
+    @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .dashboard-body { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    
-    <!-- HEADER -->
-    <header>
-      <div class="header-title">
-        <h1>DASHBOARD - SELECT</h1>
-        <p>Control de Ventas & Rendimiento de Tienda</p>
-      </div>
-
-      <div class="nav-toggle">
-        <button class="btn-toggle active">Mes en Curso</button>
-        <button class="btn-toggle">Histórico</button>
-      </div>
-    </header>
-
-    <!-- BANNER DE RANGO DE FECHAS -->
-    <div class="info-bar" id="info-mes">
-      Mostrando: Mes en Curso (2026-09)
+  <div class="top-bar">
+    <div>
+      <div class="brand-title">DASHBOARD - SELECT</div>
+      <div class="brand-sub">Control de Ventas & Rendimiento de Tienda</div>
     </div>
 
-    <!-- TARJETAS DE INDICADORES PRINCIPALES (KPIS) -->
-    <div class="kpi-grid">
-      
-      <div class="kpi-card">
-        <div class="kpi-card-title">VENTA TOTAL MES</div>
-        <div class="kpi-card-value val-white" id="kpi-venta-total">$ 15.061.600</div>
-        <div class="kpi-card-sub">
-          Proy: <span id="kpi-proy">$ 37.654.000</span> &nbsp; Prom: <span id="kpi-prom">$ 1.255.133</span>
-        </div>
-      </div>
+    <div class="view-selector">
+      <button class="view-btn active" id="btn-curso" onclick="cambiarVista('curso')">Mes en Curso</button>
+      <button class="view-btn" id="btn-historico" onclick="cambiarVista('historico')">Histórico</button>
+    </div>
+  </div>
 
-      <div class="kpi-card">
-        <div class="kpi-card-title">SHELL BOX ACUMULADO</div>
-        <div class="kpi-card-value val-orange" id="kpi-shellbox">$ 2.796.245</div>
-        <div class="kpi-card-sub">Cobros por App</div>
-      </div>
+  <div class="filter-bar">
+    <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted);" id="label-periodo">Cargando datos...</span>
+    <select id="select-mes-historico" class="select-month" style="display:none;" onchange="procesarDashboard()">
+    </select>
+  </div>
 
-      <div class="kpi-card">
-        <div class="kpi-card-title">TARJETAS ACUMULADO</div>
-        <div class="kpi-card-value val-white" id="kpi-tarjetas">$ 2.646.238</div>
-        <div class="kpi-card-sub">Débito / Crédito</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-title">Proyección Venta Mes</div>
+      <div class="kpi-value" id="kpi-vta-proy" style="color:var(--accent-gold);">$0</div>
+      <div class="kpi-details">
+        <span>Acum: <strong id="kpi-vta-acum" style="color:#fff;">$0</strong></span>
+        <span>Prom: <strong id="kpi-vta-prom" style="color:#fff;">$0</strong></span>
       </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">CTAS / CTES ACUMULADO</div>
-        <div class="kpi-card-value val-white" id="kpi-ctas">$ 866.000</div>
-        <div class="kpi-card-sub">Cuentas Corrientes</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">MERCADO PAGO</div>
-        <div class="kpi-card-value val-blue" id="kpi-mp">$ 2.833.000</div>
-        <div class="kpi-card-sub">Cobros QR</div>
-      </div>
-
     </div>
 
-    <!-- SECCIÓN GRÁFICO Y RANKING -->
-    <div class="main-grid">
-      
-      <!-- GRÁFICO DE LÍNEA -->
-      <div class="panel-box">
-        <h3>EVOLUCIÓN DE VENTAS DIARIAS</h3>
-        <div style="height: 300px; width: 100%;">
-          <canvas id="chartVentas"></canvas>
-        </div>
-      </div>
-
-      <!-- RANKING SHELL BOX -->
-      <div class="panel-box">
-        <h3>RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
-        <div class="ranking-container">
-          
-          <div class="ranking-item">
-            <span class="ranking-num">1.</span>
-            <span class="ranking-name">Milagros</span>
-            <span class="ranking-val">$ 1.028.040</span>
-          </div>
-
-          <div class="ranking-item">
-            <span class="ranking-num">2.</span>
-            <span class="ranking-name">Brenda</span>
-            <span class="ranking-val">$ 789.720</span>
-          </div>
-
-          <div class="ranking-item">
-            <span class="ranking-num">3.</span>
-            <span class="ranking-name">Camila</span>
-            <span class="ranking-val">$ 506.103</span>
-          </div>
-
-          <div class="ranking-item">
-            <span class="ranking-num">4.</span>
-            <span class="ranking-name">Romina</span>
-            <span class="ranking-val">$ 443.983</span>
-          </div>
-
-        </div>
-      </div>
-
+    <div class="kpi-card">
+      <div class="kpi-title">Shell Box Acumulado</div>
+      <div class="kpi-value" id="kpi-sb" style="color:var(--accent-gold);">$0</div>
+      <div class="kpi-details"><span>Cobros por App</span></div>
     </div>
 
+    <div class="kpi-card">
+      <div class="kpi-title">Tarjetas Acumulado</div>
+      <div class="kpi-value" id="kpi-tarjetas">$0</div>
+      <div class="kpi-details"><span>Débito / Crédito</span></div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Ctas / Ctes Acumulado</div>
+      <div class="kpi-value" id="kpi-ctasctes">$0</div>
+      <div class="kpi-details"><span>Cuentas Corrientes</span></div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Mercado Pago</div>
+      <div class="kpi-value" id="kpi-mp" style="color:var(--accent-blue);">$0</div>
+      <div class="kpi-details"><span>Cobros QR</span></div>
+    </div>
+  </div>
+
+  <div class="dashboard-body">
+    <div class="panel-card">
+      <div class="panel-title">Evolución de Ventas Diarias (Días Cerrados)</div>
+      <div style="height: 250px;">
+        <canvas id="chartEvolucion"></canvas>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <div class="panel-title">Ranking del Mes (Shell Box x Personal)</div>
+      <div class="ranking-list" id="ranking-cajeros">
+        <div style="font-size:0.8rem; color:var(--text-muted);">Cargando personal...</div>
+      </div>
+    </div>
   </div>
 
   <script>
-    // Inicialización del Gráfico de Evolución con Chart.js
-    const ctx = document.getElementById('chartVentas').getContext('2d');
-    
-    const chartVentas = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [
-          '01-09-2026', '02-09-2026', '03-09-2026', '04-09-2026', 
-          '05-09-2026', '06-09-2026', '07-09-2026', '08-09-2026', 
-          '09-09-2026', '10-09-2026', '11-09-2026', '12-09-2026'
-        ],
-        datasets: [{
-          label: 'Ventas Diarias',
-          data: [2600000, 3000000, 3200000, 2800000, 1600000, 350000, 1050000, 0, 0, 0, 0, 0],
-          borderColor: '#ff9900',
-          backgroundColor: '#ff9900',
-          borderWidth: 2,
-          pointRadius: 4,
-          pointBackgroundColor: '#ff9900',
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU-oG-TKjKenhP-yY6wcEyf6gZizKWmboIt6PHavsexY_t3UnIPXuGLcg_MuL379GUy2jaawNCYSSq/pub?gid=0&single=true&output=csv";
+
+    let todosLosDatos = [];
+    let vistaActual = "curso";
+    let chartInstance = null;
+    let mesSeleccionadoAnioMes = "";
+
+    document.addEventListener("DOMContentLoaded", cargarCSV);
+
+    function cargarCSV() {
+      Papa.parse(CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          todosLosDatos = results.data.filter(f => f["Fecha (c3)"] && f["Fecha (c3)"].trim() !== "");
+          poblarSelectorHistorico();
+          procesarDashboard();
+        }
+      });
+    }
+
+    function parsearMonto(valor) {
+      if (!valor) return 0;
+      let str = valor.toString().replace(/\$/g, "").trim();
+      if (str.includes(",") && str.includes(".")) str = str.replace(/\./g, "").replace(",", ".");
+      else if (str.includes(",")) str = str.replace(",", ".");
+      const n = parseFloat(str);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function formatearARS(monto) {
+      return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(monto);
+    }
+
+    function parsearFechaLocal(fechaStr) {
+      const partes = fechaStr.split("-");
+      if (partes.length !== 3) return null;
+      return new Date(parseInt(partes[2], 10), parseInt(partes[1], 10) - 1, parseInt(partes[0], 10));
+    }
+
+    function obtenerDiasDelMes(anioMesStr) {
+      const [anio, mes] = anioMesStr.split("-").map(Number);
+      return new Date(anio, mes, 0).getDate();
+    }
+
+    function cambiarVista(vista) {
+      vistaActual = vista;
+      document.getElementById("btn-curso").classList.toggle("active", vista === "curso");
+      document.getElementById("btn-historico").classList.toggle("active", vista === "historico");
+      document.getElementById("select-mes-historico").style.display = (vista === "historico") ? "inline-block" : "none";
+      procesarDashboard();
+    }
+
+    function poblarSelectorHistorico() {
+      const select = document.getElementById("select-mes-historico");
+      select.innerHTML = "";
+
+      const meses = [...new Set(todosLosDatos.map(r => {
+        const partes = r["Fecha (c3)"].split("-");
+        return `${partes[2]}-${partes[1]}`;
+      }))].sort().reverse();
+
+      const mesesHistoricos = meses.slice(1);
+      mesesHistoricos.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.innerText = `Mes ${m}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function procesarDashboard() {
+      let datosFiltrados = [];
+      const hoy = new Date();
+      const fechaHoyLimpia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      const mesActualStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+
+      if (vistaActual === "curso") {
+        mesSeleccionadoAnioMes = mesActualStr;
+        document.getElementById("label-periodo").innerText = `Mostrando: Mes en Curso (${mesActualStr}) - Solo días cerrados`;
+        
+        datosFiltrados = todosLosDatos.filter(r => {
+          const fObj = parsearFechaLocal(r["Fecha (c3)"]);
+          if (!fObj) return false;
+          
+          const p = r["Fecha (c3)"].split("-");
+          const esMesActual = `${p[2]}-${p[1]}` === mesActualStr;
+          
+          return esMesActual && (fObj < fechaHoyLimpia);
+        });
+      } else {
+        const mesSel = document.getElementById("select-mes-historico").value || mesActualStr;
+        mesSeleccionadoAnioMes = mesSel;
+        document.getElementById("label-periodo").innerText = `Mostrando Histórico: ${mesSel}`;
+        
+        datosFiltrados = todosLosDatos.filter(r => {
+          const p = r["Fecha (c3)"].split("-");
+          return `${p[2]}-${p[1]}` === mesSel;
+        });
+      }
+
+      renderizarMetricasYGrafico(datosFiltrados);
+    }
+
+    function normalizarNombre(nombre) {
+      if (!nombre) return "";
+      const t = nombre.trim();
+      if (!t || t === "0" || t === "-") return "";
+      return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+    }
+
+    function renderizarMetricasYGrafico(datos) {
+      let totalVta = 0, totalSB = 0, totalTarjetas = 0, totalCtasCtes = 0, totalMP = 0;
+      let ventasPorDia = {};
+      let rankingPersonas = {}; // Guarda { monto: 0, manana: 0, tarde: 0, diasUnicos: Set() }
+
+      datos.forEach(r => {
+        const vta = parsearMonto(r["Vta Total (R11)"]);
+        const sb = parsearMonto(r["Shell Box(R6)"]);
+        const tarj = parsearMonto(r["Tarjetas(R9)"]);
+        const ctas = parsearMonto(r["Ctas/ctes(R8)"]);
+        const mp = parsearMonto(r["Mercado PAgo(R7)"]);
+
+        totalVta += vta;
+        totalSB += sb;
+        totalTarjetas += tarj;
+        totalCtasCtes += ctas;
+        totalMP += mp;
+
+        const fecha = r["Fecha (c3)"];
+        ventasPorDia[fecha] = (ventasPorDia[fecha] || 0) + vta;
+
+        const c1 = normalizarNombre(r["Cajero1(f3)"]);
+        const c2 = normalizarNombre(r["Cajero2(f4)"]);
+        
+        const cajerosValidos = [c1, c2].filter(Boolean);
+
+        if (cajerosValidos.length > 0) {
+          const parteMonto = sb / cajerosValidos.length;
+
+          if (c1) {
+            if (!rankingPersonas[c1]) rankingPersonas[c1] = { monto: 0, manana: 0, tarde: 0, diasUnicos: new Set() };
+            rankingPersonas[c1].monto += parteMonto;
+            rankingPersonas[c1].manana += 1;
+            rankingPersonas[c1].diasUnicos.add(fecha);
+          }
+
+          if (c2) {
+            if (!rankingPersonas[c2]) rankingPersonas[c2] = { monto: 0, manana: 0, tarde: 0, diasUnicos: new Set() };
+            rankingPersonas[c2].monto += parteMonto;
+            rankingPersonas[c2].tarde += 1;
+            rankingPersonas[c2].diasUnicos.add(fecha);
+          }
+        } else if (sb > 0) {
+          if (!rankingPersonas["Sin Asignar"]) rankingPersonas["Sin Asignar"] = { monto: 0, manana: 0, tarde: 0, diasUnicos: new Set() };
+          rankingPersonas["Sin Asignar"].monto += sb;
+        }
+      });
+
+      const diasTranscurridos = Object.keys(ventasPorDia).length || 1;
+      const promedioDiario = totalVta / diasTranscurridos;
+      
+      const diasTotalesDelMes = obtenerDiasDelMes(mesSeleccionadoAnioMes);
+      const proyeccionMes = promedioDiario * diasTotalesDelMes;
+
+      document.getElementById("kpi-vta-proy").innerText = formatearARS(proyeccionMes);
+      document.getElementById("kpi-vta-acum").innerText = formatearARS(totalVta);
+      document.getElementById("kpi-vta-prom").innerText = formatearARS(promedioDiario);
+      
+      document.getElementById("kpi-sb").innerText = formatearARS(totalSB);
+      document.getElementById("kpi-tarjetas").innerText = formatearARS(totalTarjetas);
+      document.getElementById("kpi-ctasctes").innerText = formatearARS(totalCtasCtes);
+      document.getElementById("kpi-mp").innerText = formatearARS(totalMP);
+
+      // Ranking de Personal
+      const rankingEl = document.getElementById("ranking-cajeros");
+      rankingEl.innerHTML = "";
+      
+      const rankingOrdenado = Object.entries(rankingPersonas).sort((a, b) => b[1].monto - a[1].monto);
+      
+      if (rankingOrdenado.length === 0) {
+        rankingEl.innerHTML = `<div style="font-size:0.8rem; color:var(--text-muted);">Sin registros cerrados en el período</div>`;
+      } else {
+        rankingOrdenado.forEach(([nombre, info], idx) => {
+          let textoTurnos = "";
+
+          if (nombre !== "Sin Asignar") {
+            const diasTrabajados = info.diasUnicos.size || 1;
+            const promDiarioPersona = info.monto / diasTrabajados;
+            textoTurnos = `(M: ${info.manana}d / T: ${info.tarde}d | Prom: ${formatearARS(promDiarioPersona)}/d)`;
+          }
+
+          rankingEl.innerHTML += `
+            <div class="ranking-item">
+              <span class="ranking-name">${idx + 1}. ${nombre}</span>
+              <span class="ranking-shifts">${textoTurnos}</span>
+              <span class="ranking-val">${formatearARS(info.monto)}</span>
+            </div>
+          `;
+        });
+      }
+
+      renderizarGrafico(Object.keys(ventasPorDia), Object.values(ventasPorDia));
+    }
+
+    function renderizarGrafico(labels, data) {
+      const ctx = document.getElementById("chartEvolucion").getContext("2d");
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Venta Diaria ($)",
+            data: data,
+            borderColor: "#f59e0b",
+            backgroundColor: "rgba(245, 158, 11, 0.1)",
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3
+          }]
         },
-        scales: {
-          x: {
-            grid: { color: '#1a2333' },
-            ticks: { color: '#8a99ad', font: { size: 10 } }
-          },
-          y: {
-            grid: { color: '#1a2333' },
-            ticks: { 
-              color: '#8a99ad',
-              callback: function(val) {
-                return val.toLocaleString('es-AR');
-              }
-            },
-            min: 0,
-            max: 3500000
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: "#9ca3af" }, grid: { color: "#1f293d" } },
+            y: { ticks: { color: "#9ca3af" }, grid: { color: "#1f293d" } }
           }
         }
-      }
-    });
+      });
+    }
   </script>
 </body>
 </html>
