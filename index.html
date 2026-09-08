@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DASHBOARD - SELECT</title>
-  <!-- Chart.js para el gráfico de evolución -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -76,6 +76,7 @@
       font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
+      transition: all 0.2s ease;
     }
 
     .btn-toggle.active {
@@ -138,7 +139,7 @@
       color: #ffffff;
     }
 
-    /* PANEL PRINCIPAL: GRÁFICO + RANKING SHELL BOX */
+    /* PANEL PRINCIPAL */
     .main-grid {
       display: grid;
       grid-template-columns: 1.5fr 1fr;
@@ -255,17 +256,17 @@
       </div>
 
       <div class="nav-toggle">
-        <button class="btn-toggle active">Mes en Curso</button>
-        <button class="btn-toggle">Histórico</button>
+        <button class="btn-toggle active" id="btn-curso" onclick="cambiarVista('curso')">Mes en Curso</button>
+        <button class="btn-toggle" id="btn-historico" onclick="cambiarVista('historico')">Histórico</button>
       </div>
     </header>
 
     <!-- BANNER INFORMATIVO -->
-    <div class="info-bar">
+    <div class="info-bar" id="info-banner">
       Mostrando: Mes en Curso (2026-09) - Solo días cerrados
     </div>
 
-    <!-- KPIS MONETARIOS PRINCIPALES -->
+    <!-- KPIS MONETARIOS -->
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-card-title">PROYECCIÓN VENTA MES</div>
@@ -298,17 +299,17 @@
       </div>
     </div>
 
-    <!-- EVOLUCIÓN DE VENTAS & RANKING SHELL BOX -->
+    <!-- GRÁFICO + RANKING SHELL BOX -->
     <div class="main-grid">
       <div class="panel-box">
-        <h3>EVOLUCIÓN DE VENTAS DIARIAS (DÍAS CERRADOS)</h3>
+        <h3 id="chart-title">EVOLUCIÓN DE VENTAS DIARIAS (DÍAS CERRADOS)</h3>
         <div style="height: 300px; width: 100%;">
           <canvas id="chartVentas"></canvas>
         </div>
       </div>
 
       <div class="panel-box">
-        <h3>RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
+        <h3 id="ranking-title">RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
         <div class="ranking-list" id="ranking-shellbox">
           <div class="ranking-row">
             <div class="ranking-user">
@@ -377,7 +378,7 @@
 
     <!-- ACUMULADO MENSUAL POR CAJERO (50/50) -->
     <div class="panel-box" style="margin-bottom: 20px;">
-      <h3>ACUMULADO MENSUAL POR CAJERO (UNIDADES)</h3>
+      <h3 id="tabla-cajeros-title">ACUMULADO MENSUAL POR CAJERO (UNIDADES)</h3>
       <div class="table-container">
         <table>
           <thead>
@@ -392,7 +393,7 @@
             </tr>
           </thead>
           <tbody id="tbody-cajeros">
-            <!-- Datos unificados de cajeros -->
+            <!-- Filas cajeros -->
           </tbody>
         </table>
       </div>
@@ -426,33 +427,79 @@
   </div>
 
   <script>
-    // 1. Gráfico de Evolución
-    const ctx = document.getElementById('chartVentas').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: ['01-09-2026', '02-09-2026', '03-09-2026', '04-09-2026', '05-09-2026', '06-09-2026', '07-09-2026'],
-        datasets: [{
-          data: [2650000, 3050000, 3250000, 2900000, 1680000, 380000, 1100000],
-          borderColor: '#ff9900',
-          backgroundColor: '#ff9900',
-          borderWidth: 2,
-          pointRadius: 4,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { color: '#1a2333' }, ticks: { color: '#8a99ad', font: { size: 10 } } },
-          y: { grid: { color: '#1a2333' }, ticks: { color: '#8a99ad' }, min: 0 }
-        }
-      }
-    });
+    // URL Web App de Google Apps Script (Reemplazar con la tuya si aplica)
+    const APPS_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
 
-    // 2. Procesador de Unidades y Tablas
+    let chartVentasInstance = null;
+    let modoVista = 'curso'; // 'curso' o 'historico'
+
+    // Datos de muestra: Mes en Curso
+    const datosMesCurso = [
+      { fecha: '01-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Brenda', cafes: 45, facturas: 80, sandwiches: 12, promo39: 25, fastFood: 8 },
+      { fecha: '01-09-2026', turno: 'Tarde', playero1: 'Camila', playero2: 'Romina', cafes: 30, facturas: 40, sandwiches: 18, promo39: 15, fastFood: 14 },
+      { fecha: '02-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Camila', cafes: 50, facturas: 95, sandwiches: 15, promo39: 30, fastFood: 10 },
+      { fecha: '02-09-2026', turno: 'Tarde', playero1: 'Brenda', playero2: 'Romina', cafes: 28, facturas: 35, sandwiches: 20, promo39: 18, fastFood: 12 }
+    ];
+
+    // Datos de muestra: Histórico
+    const datosHistorico = [
+      { fecha: '01-08-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Brenda', cafes: 140, facturas: 210, sandwiches: 45, promo39: 80, fastFood: 30 },
+      { fecha: '01-08-2026', turno: 'Tarde', playero1: 'Camila', playero2: 'Romina', cafes: 110, facturas: 150, sandwiches: 60, promo39: 55, fastFood: 42 },
+      { fecha: '02-08-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Camila', cafes: 160, facturas: 230, sandwiches: 50, promo39: 90, fastFood: 35 },
+      { fecha: '02-08-2026', turno: 'Tarde', playero1: 'Brenda', playero2: 'Romina', cafes: 100, facturas: 130, sandwiches: 55, promo39: 60, fastFood: 40 }
+    ];
+
+    // Cambiar entre vista Curso e Histórico
+    function cambiarVista(modo) {
+      modoVista = modo;
+      document.getElementById('btn-curso').classList.toggle('active', modo === 'curso');
+      document.getElementById('btn-historico').classList.toggle('active', modo === 'historico');
+
+      const infoBanner = document.getElementById('info-banner');
+      if (modo === 'curso') {
+        infoBanner.innerText = 'Mostrando: Mes en Curso (2026-09) - Solo días cerrados';
+        actualizarGrafico(['01-09-2026', '02-09-2026', '03-09-2026', '04-09-2026', '05-09-2026', '06-09-2026', '07-09-2026'], [2650000, 3050000, 3250000, 2900000, 1680000, 380000, 1100000]);
+        procesarUnidadesSelect(datosMesCurso);
+      } else {
+        infoBanner.innerText = 'Mostrando: Histórico Consolidado (Meses Anteriores)';
+        actualizarGrafico(['Mayo 2026', 'Junio 2026', 'Julio 2026', 'Agosto 2026'], [54000000, 58200000, 61500000, 63800000]);
+        procesarUnidadesSelect(datosHistorico);
+      }
+    }
+
+    // Actualizar o crear gráfico
+    function actualizarGrafico(labels, data) {
+      const ctx = document.getElementById('chartVentas').getContext('2d');
+      if (chartVentasInstance) {
+        chartVentasInstance.destroy();
+      }
+
+      chartVentasInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            borderColor: '#ff9900',
+            backgroundColor: '#ff9900',
+            borderWidth: 2,
+            pointRadius: 4,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#1a2333' }, ticks: { color: '#8a99ad', font: { size: 10 } } },
+            y: { grid: { color: '#1a2333' }, ticks: { color: '#8a99ad' }, min: 0 }
+          }
+        }
+      });
+    }
+
+    // Procesar datos de unidades, KPIs y tablas
     function procesarUnidadesSelect(registros) {
       if (!registros || registros.length === 0) return;
 
@@ -462,7 +509,7 @@
       const diaCerrado = hoy.getDate() - 1 || 1;
       const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
 
-      let acumulados = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastFood: 0 };
+      let acumulados = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
       let rankingCajeros = {};
 
       const tbodyJornadas = document.getElementById('tbody-jornadas');
@@ -475,9 +522,9 @@
         const fac = Number(fila.facturas || 0);
         const s = Number(fila.sandwiches || 0);
         const p = Number(fila.promo39 || 0);
-        const ff = Number(fila.fastFood || 0);
+        const ff = Number(fila.fastFood || fila.fastfood || 0);
 
-        // Fila Detalle
+        // Render fila detalle
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${fila.fecha}</td>
@@ -492,14 +539,14 @@
         `;
         tbodyJornadas.appendChild(tr);
 
-        // Acumulados
+        // Sumar acumulados
         acumulados.cafes += c;
         acumulados.facturas += fac;
         acumulados.sandwiches += s;
         acumulados.promo39 += p;
-        acumulados.fastFood += ff;
+        acumulados.fastfood += ff;
 
-        // Reparto 50/50
+        // Reparto 50/50 por cajero
         let cajeros = [];
         if (fila.playero1 && fila.playero1 !== "—") cajeros.push(fila.playero1.trim());
         if (fila.playero2 && fila.playero2 !== "—") cajeros.push(fila.playero2.trim());
@@ -507,26 +554,30 @@
         if (cajeros.length > 0) {
           const factor = 1 / cajeros.length;
           cajeros.forEach(caj => {
-            if (!rankingCajeros[caj]) rankingCajeros[caj] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastFood: 0 };
+            if (!rankingCajeros[caj]) rankingCajeros[caj] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
             rankingCajeros[caj].cafes += (c * factor);
             rankingCajeros[caj].facturas += (fac * factor);
             rankingCajeros[caj].sandwiches += (s * factor);
             rankingCajeros[caj].promo39 += (p * factor);
-            rankingCajeros[caj].fastFood += (ff * factor);
+            rankingCajeros[caj].fastfood += (ff * factor);
           });
         }
       });
 
       // Render KPIs
-      const factorProy = diasEnMes / diaCerrado;
-      ['cafes', 'facturas', 'sandwiches', 'promo39', 'fastFood'].forEach(kpi => {
+      const factorProy = (modoVista === 'curso') ? (diasEnMes / diaCerrado) : 1;
+      ['cafes', 'facturas', 'sandwiches', 'promo39', 'fastfood'].forEach(kpi => {
         const total = acumulados[kpi];
-        const prom = (total / diaCerrado).toFixed(1);
+        const prom = (modoVista === 'curso') ? (total / diaCerrado).toFixed(1) : (total / 30).toFixed(1);
         const proy = Math.round(total * factorProy);
 
-        document.getElementById(`kpi-${kpi}-proy`).innerText = proy.toLocaleString('es-AR');
-        document.getElementById(`kpi-${kpi}-acum`).innerText = total.toLocaleString('es-AR');
-        document.getElementById(`kpi-${kpi}-prom`).innerText = prom;
+        const elProy = document.getElementById(`kpi-${kpi}-proy`);
+        const elAcum = document.getElementById(`kpi-${kpi}-acum`);
+        const elProm = document.getElementById(`kpi-${kpi}-prom`);
+
+        if (elProy) elProy.innerText = proy.toLocaleString('es-AR');
+        if (elAcum) elAcum.innerText = total.toLocaleString('es-AR');
+        if (elProm) elProm.innerText = prom;
       });
 
       // Render Tabla Cajeros
@@ -534,7 +585,7 @@
       tbodyCajeros.innerHTML = '';
       Object.keys(rankingCajeros).sort().forEach(caj => {
         const d = rankingCajeros[caj];
-        const total = d.cafes + d.facturas + d.sandwiches + d.promo39 + d.fastFood;
+        const total = d.cafes + d.facturas + d.sandwiches + d.promo39 + d.fastfood;
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><b>${caj}</b></td>
@@ -542,23 +593,16 @@
           <td>${Math.round(d.facturas)}</td>
           <td>${Math.round(d.sandwiches)}</td>
           <td>${Math.round(d.promo39)}</td>
-          <td>${Math.round(d.fastFood)}</td>
+          <td>${Math.round(d.fastfood)}</td>
           <td style="color: var(--accent-cyan); font-weight: bold;">${Math.round(total)}</td>
         `;
         tbodyCajeros.appendChild(tr);
       });
     }
 
-    // 3. Carga Automática al iniciar
+    // Inicializar en carga
     document.addEventListener("DOMContentLoaded", () => {
-      const datosEjemplo = [
-        { fecha: '01-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Brenda', cafes: 45, facturas: 80, sandwiches: 12, promo39: 25, fastFood: 8 },
-        { fecha: '01-09-2026', turno: 'Tarde', playero1: 'Camila', playero2: 'Romina', cafes: 30, facturas: 40, sandwiches: 18, promo39: 15, fastFood: 14 },
-        { fecha: '02-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Camila', cafes: 50, facturas: 95, sandwiches: 15, promo39: 30, fastFood: 10 },
-        { fecha: '02-09-2026', turno: 'Tarde', playero1: 'Brenda', playero2: 'Romina', cafes: 28, facturas: 35, sandwiches: 20, promo39: 18, fastFood: 12 }
-      ];
-
-      procesarUnidadesSelect(datosEjemplo);
+      cambiarVista('curso');
     });
   </script>
 </body>
