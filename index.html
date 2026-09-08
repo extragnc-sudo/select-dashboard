@@ -281,8 +281,8 @@
   </div>
 
   <script>
-    // URL FINAL Y DIRECTA DE TU WEB APP
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45I4j-Z5Weu8IHSburgFbN1pYRBPJGaN6H7-v7H_xkznTshuZhrQT5SCpDx_Zp/exec';
+    // URL CORREGIDA Y PROBADA CON CARACTERES EXACTOS
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45I4j-Z5Weu8IHSburgFbN1pYRBPJGaN6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
 
     let datosGlobales = [];
     let chartInstance = null;
@@ -315,7 +315,6 @@
     function renderizar() {
       if (!datosGlobales.length) return;
 
-      // Filtrar por mes actual si está en modo 'actual'
       const hoy = new Date();
       const mesActual = (hoy.getMonth() + 1).toString().padStart(2, '0');
       const anioActual = hoy.getFullYear().toString();
@@ -329,7 +328,6 @@
         });
       }
 
-      // Calcular Unidades
       let totCafes = 0, totFacturas = 0, totSandwiches = 0, totPromo = 0, totFastFood = 0;
       let rankingMap = {};
 
@@ -346,7 +344,6 @@
         totPromo += p;
         totFastFood += ff;
 
-        // Repartir 50/50 si hay 2 playeros
         const totalFila = c + f + s + p + ff;
         const playeros = [d.playero1, d.playero2].filter(Boolean);
         if (playeros.length > 0) {
@@ -359,7 +356,6 @@
 
       const diasCount = Math.max(new Set(datosFiltrados.map(d => d.fecha)).size, 1);
 
-      // Renderizar Tarjetas de Unidades
       document.getElementById('uCafes').innerText = totCafes;
       document.getElementById('uCafesAcum').innerText = totCafes;
       document.getElementById('uCafesProm').innerText = (totCafes / diasCount).toFixed(1) + '/día';
@@ -380,7 +376,6 @@
       document.getElementById('uFastFoodAcum').innerText = totFastFood;
       document.getElementById('uFastFoodProm').innerText = (totFastFood / diasCount).toFixed(1) + '/día';
 
-      // Renderizar Tabla de Ranking
       const rankingSorted = Object.entries(rankingMap).sort((a, b) => b[1] - a[1]);
       const tbody = document.getElementById('tablaRanking');
       tbody.innerHTML = '';
@@ -390,14 +385,12 @@
         tbody.appendChild(tr);
       });
 
-      // Renderizar Gráfico Daily Evolution
       renderizarGrafico(datosFiltrados);
     }
 
     function renderizarGrafico(datos) {
       const ctx = document.getElementById('chartVentas').getContext('2d');
       
-      // Agrupar unidades totales por fecha
       const agrupado = {};
       datos.forEach(d => {
         const total = (Number(d.cafes)||0) + (Number(d.facturas)||0) + (Number(d.sandwiches)||0) + (Number(d.promo39)||0) + (Number(d.fastFood)||0);
@@ -434,7 +427,6 @@
       });
     }
 
-    // Inicio automático
     cargarDatos();
   </script>
 </body>
