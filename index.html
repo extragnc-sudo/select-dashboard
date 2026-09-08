@@ -4,486 +4,308 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DASHBOARD - SELECT</title>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root {
-      --bg-main: #0a0d14;
-      --bg-card: #111622;
-      --bg-card-border: #1a2333;
-      --text-main: #ffffff;
-      --text-muted: #8a99ad;
-      --accent-orange: #ff9900;
-      --accent-blue: #3b82f6;
-      --accent-cyan: #38bdf8;
-      --badge-bg: #1e293b;
-    }
-
-    * {
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
+    * { box-sizing: border-box; }
     body {
-      background-color: var(--bg-main);
-      color: var(--text-main);
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
       margin: 0;
-      padding: 24px;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    /* HEADER */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .header-title h1 {
-      font-size: 1.4rem;
-      font-weight: 800;
-      margin: 0;
-      letter-spacing: 0.5px;
-      color: #ffffff;
-    }
-
-    .header-title p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin: 3px 0 0 0;
-    }
-
-    .nav-toggle {
-      background: #111622;
-      border: 1px solid var(--bg-card-border);
-      border-radius: 8px;
-      padding: 4px;
-      display: flex;
-      gap: 4px;
-    }
-
-    .btn-toggle {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-toggle.active {
-      background: var(--accent-orange);
-      color: #000000;
-      font-weight: 700;
-    }
-
-    .info-bar {
-      background: var(--bg-card);
-      border: 1px solid var(--bg-card-border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 20px;
-    }
-
-    /* GRID KPIS MONETARIOS */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .kpi-card {
-      background: var(--bg-card);
-      border: 1px solid var(--bg-card-border);
-      border-radius: 10px;
-      padding: 16px;
-    }
-
-    .kpi-card-title {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
-    }
-
-    .kpi-card-value {
-      font-size: 1.6rem;
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .val-orange { color: var(--accent-orange); }
-    .val-white { color: #ffffff; }
-    .val-blue { color: var(--accent-blue); }
-    .val-cyan { color: var(--accent-cyan); }
-
-    .kpi-card-sub {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .kpi-card-sub b {
-      color: #ffffff;
-    }
-
-    /* PANEL PRINCIPAL */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .panel-box {
-      background: var(--bg-card);
-      border: 1px solid var(--bg-card-border);
-      border-radius: 10px;
       padding: 20px;
     }
-
-    .panel-box h3 {
-      font-size: 0.85rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin: 0 0 20px 0;
-      color: #ffffff;
-    }
-
-    .ranking-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .ranking-row {
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.88rem;
+      margin-bottom: 20px;
     }
-
-    .ranking-user {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ranking-num {
-      font-weight: 800;
+    .error-banner {
+      background-color: #ef4444;
       color: #ffffff;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+      font-weight: bold;
     }
-
-    .ranking-name {
-      font-weight: 700;
-      color: #ffffff;
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
     }
-
-    .ranking-metrics {
+    .card {
+      background-color: #1e293b;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .card-title {
       font-size: 0.75rem;
-      color: var(--text-muted);
+      color: #94a3b8;
+      font-weight: bold;
+      text-transform: uppercase;
     }
-
-    .ranking-val {
-      color: var(--accent-orange);
-      font-weight: 800;
+    .card-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #f59e0b;
+      margin: 8px 0;
     }
-
-    /* TABLAS */
-    .table-container {
-      overflow-x: auto;
+    .card-sub {
+      font-size: 0.8rem;
+      color: #64748b;
     }
-
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background-color: #1e293b;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .chart-container {
+      height: 300px;
+      position: relative;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.88rem;
+      margin-top: 10px;
+    }
+    th, td {
       text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid #334155;
+      font-size: 0.9rem;
     }
-
-    th {
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--bg-card-border);
-      text-transform: uppercase;
+    th { color: #94a3b8; }
+    .btn-group button {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
     }
-
-    td {
-      padding: 12px;
-      border-bottom: 1px solid var(--bg-card-border);
-      color: var(--text-main);
-    }
-
-    tr:hover {
-      background: #1a2333;
-    }
-
-    .badge-turno {
-      background: var(--badge-bg);
-      color: var(--accent-cyan);
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 700;
+    .btn-group button.active {
+      background: #f59e0b;
+      color: #0f172a;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    
-    <!-- HEADER -->
-    <header>
-      <div class="header-title">
-        <h1>DASHBOARD - SELECT</h1>
-        <p>Control de Ventas & Rendimiento de Tienda</p>
-      </div>
+  <div id="errorBanner" class="error-banner">Error al conectar con Maestra Select. Verifica APPS_SCRIPT_URL.</div>
 
-      <div class="nav-toggle">
-        <button class="btn-toggle active" id="btn-curso" onclick="cambiarVista('curso')">Mes en Curso</button>
-        <button class="btn-toggle" id="btn-historico" onclick="cambiarVista('historico')">Histórico</button>
-      </div>
-    </header>
-
-    <!-- BANNER INFORMATIVO -->
-    <div class="info-bar" id="info-banner">
-      Mostrando: Mes en Curso (2026-09) - Solo días cerrados
+  <div class="header">
+    <div>
+      <h1 style="margin:0;">DASHBOARD - SELECT</h1>
+      <small style="color:#94a3b8;">Control de Ventas & Rendimiento de Tienda</small>
     </div>
+    <div class="btn-group">
+      <button id="btnActual" class="active" onclick="cambiarVista('actual')">Mes en Curso</button>
+      <button id="btnHistorico" onclick="cambiarVista('historico')">Histórico</button>
+    </div>
+  </div>
 
-    <!-- KPIS MONETARIOS -->
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-card-title">PROYECCIÓN VENTA MES</div>
-        <div class="kpi-card-value val-orange" id="kpi-proy-venta">$ 64.549.714</div>
-        <div class="kpi-card-sub">Acum: <b id="kpi-acum-venta">$ 15.061.600</b> &nbsp; Prom: <b id="kpi-prom-venta">$ 2.151.657</b></div>
-      </div>
+  <div class="grid-cards">
+    <div class="card">
+      <div class="card-title">Cafés</div>
+      <div id="uCafes" class="card-value">0</div>
+      <div class="card-sub">Prom: <span id="uCafesProm">0/día</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Facturas</div>
+      <div id="uFacturas" class="card-value">0</div>
+      <div class="card-sub">Prom: <span id="uFacturasProm">0/día</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Sandwiches</div>
+      <div id="uSandwiches" class="card-value">0</div>
+      <div class="card-sub">Prom: <span id="uSandwichesProm">0/día</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Promo 39</div>
+      <div id="uPromo" class="card-value">0</div>
+      <div class="card-sub">Prom: <span id="uPromoProm">0/día</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Fast Food</div>
+      <div id="uFastFood" class="card-value">0</div>
+      <div class="card-sub">Prom: <span id="uFastFoodProm">0/día</span></div>
+    </div>
+  </div>
 
-      <div class="kpi-card">
-        <div class="kpi-card-title">SHELL BOX ACUMULADO</div>
-        <div class="kpi-card-value val-orange" id="kpi-shellbox">$ 2.796.245</div>
-        <div class="kpi-card-sub">Cobros por App</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">TARJETAS ACUMULADO</div>
-        <div class="kpi-card-value val-white" id="kpi-tarjetas">$ 2.911.738</div>
-        <div class="kpi-card-sub">Débito / Crédito</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">CTAS / CTES ACUMULADO</div>
-        <div class="kpi-card-value val-white" id="kpi-ctas">$ 866.000</div>
-        <div class="kpi-card-sub">Cuentas Corrientes</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">MERCADO PAGO</div>
-        <div class="kpi-card-value val-blue" id="kpi-mp">$ 2.833.000</div>
-        <div class="kpi-card-sub">Cobros QR</div>
+  <div class="main-grid">
+    <div class="panel">
+      <h3 style="margin-top:0;">EVOLUCIÓN DE VENTAS DIARIAS</h3>
+      <div class="chart-container">
+        <canvas id="chartVentas"></canvas>
       </div>
     </div>
-
-    <!-- GRÁFICO + RANKING SHELL BOX -->
-    <div class="main-grid">
-      <div class="panel-box">
-        <h3 id="chart-title">EVOLUCIÓN DE VENTAS DIARIAS (DÍAS CERRADOS)</h3>
-        <div style="height: 300px; width: 100%;">
-          <canvas id="chartVentas"></canvas>
-        </div>
-      </div>
-
-      <div class="panel-box">
-        <h3 id="ranking-title">RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
-        <div class="ranking-list" id="ranking-shellbox">
-          <div class="ranking-row">
-            <div class="ranking-user">
-              <span class="ranking-num">1.</span>
-              <span class="ranking-name">Milagros</span>
-              <span class="ranking-metrics">(M: 4d / T: 2d | Prom: $ 171.340/d)</span>
-            </div>
-            <span class="ranking-val">$ 1.028.040</span>
-          </div>
-          <div class="ranking-row">
-            <div class="ranking-user">
-              <span class="ranking-num">2.</span>
-              <span class="ranking-name">Brenda</span>
-              <span class="ranking-metrics">(M: 2d / T: 4d | Prom: $ 136.353/d)</span>
-            </div>
-            <span class="ranking-val">$ 818.120</span>
-          </div>
-          <div class="ranking-row">
-            <div class="ranking-user">
-              <span class="ranking-num">3.</span>
-              <span class="ranking-name">Camila</span>
-              <span class="ranking-metrics">(M: 3d / T: 3d | Prom: $ 84.350/d)</span>
-            </div>
-            <span class="ranking-val">$ 506.103</span>
-          </div>
-          <div class="ranking-row">
-            <div class="ranking-user">
-              <span class="ranking-num">4.</span>
-              <span class="ranking-name">Romina</span>
-              <span class="ranking-metrics">(M: 4d / T: 2d | Prom: $ 73.997/d)</span>
-            </div>
-            <span class="ranking-val">$ 443.983</span>
-          </div>
-        </div>
-      </div>
+    <div class="panel">
+      <h3 style="margin-top:0;">RANKING DEL MES</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Personal</th>
+            <th>Unidades</th>
+          </tr>
+        </thead>
+        <tbody id="tablaRanking"></tbody>
+      </table>
     </div>
-
-    <!-- KPIS UNIDADES SELECT -->
-    <div class="kpi-grid" style="margin-bottom: 20px;">
-      <div class="kpi-card">
-        <div class="kpi-card-title">CAFÉS / INFUSIONES</div>
-        <div class="kpi-card-value val-cyan" id="kpi-cafes-proy">0</div>
-        <div class="kpi-card-sub">Acum: <b id="kpi-cafes-acum">0</b> | Prom: <b id="kpi-cafes-prom">0</b>/día</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card-title">FACTURAS / MEDIALUNAS</div>
-        <div class="kpi-card-value val-cyan" id="kpi-facturas-proy">0</div>
-        <div class="kpi-card-sub">Acum: <b id="kpi-facturas-acum">0</b> | Prom: <b id="kpi-facturas-prom">0</b>/día</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card-title">SÁNDWICHES</div>
-        <div class="kpi-card-value val-cyan" id="kpi-sandwiches-proy">0</div>
-        <div class="kpi-card-sub">Acum: <b id="kpi-sandwiches-acum">0</b> | Prom: <b id="kpi-sandwiches-prom">0</b>/día</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card-title">PROMO SERVICOMPRAS</div>
-        <div class="kpi-card-value val-cyan" id="kpi-promo39-proy">0</div>
-        <div class="kpi-card-sub">Acum: <b id="kpi-promo39-acum">0</b> | Prom: <b id="kpi-promo39-prom">0</b>/día</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card-title">FAST FOOD / PLATOS</div>
-        <div class="kpi-card-value val-cyan" id="kpi-fastfood-proy">0</div>
-        <div class="kpi-card-sub">Acum: <b id="kpi-fastfood-acum">0</b> | Prom: <b id="kpi-fastfood-prom">0</b>/día</div>
-      </div>
-    </div>
-
-    <!-- ACUMULADO MENSUAL POR CAJERO (50/50) -->
-    <div class="panel-box" style="margin-bottom: 20px;">
-      <h3 id="tabla-cajeros-title">ACUMULADO MENSUAL POR CAJERO (UNIDADES)</h3>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Cajero / Operario</th>
-              <th>Cafés</th>
-              <th>Facturas</th>
-              <th>Sándwiches</th>
-              <th>Promos 039</th>
-              <th>Fast Food</th>
-              <th>Total Unidades</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-cajeros">
-            <!-- Filas cajeros -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- DETALLE DE VENTAS POR JORNADA -->
-    <div class="panel-box">
-      <h3>DETALLE DE VENTAS POR JORNADA</h3>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Turno</th>
-              <th>Cajero 1</th>
-              <th>Cajero 2</th>
-              <th>Cafés</th>
-              <th>Facturas</th>
-              <th>Sándwiches</th>
-              <th>Promos 039</th>
-              <th>Fast Food</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-jornadas">
-            <!-- Filas por día/turno -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
   </div>
 
   <script>
-    // URL Web App de Google Apps Script (Reemplazar con la tuya si aplica)
-    const APPS_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+    // URL de Apps Script integrada directamente
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45I4j-Z5Weu8IHSburgFbN1pYRBPJGaN6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
 
-    let chartVentasInstance = null;
-    let modoVista = 'curso'; // 'curso' o 'historico'
+    let datosGlobales = [];
+    let chartInstance = null;
+    let modoVista = 'actual';
 
-    // Datos de muestra: Mes en Curso
-    const datosMesCurso = [
-      { fecha: '01-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Brenda', cafes: 45, facturas: 80, sandwiches: 12, promo39: 25, fastFood: 8 },
-      { fecha: '01-09-2026', turno: 'Tarde', playero1: 'Camila', playero2: 'Romina', cafes: 30, facturas: 40, sandwiches: 18, promo39: 15, fastFood: 14 },
-      { fecha: '02-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Camila', cafes: 50, facturas: 95, sandwiches: 15, promo39: 30, fastFood: 10 },
-      { fecha: '02-09-2026', turno: 'Tarde', playero1: 'Brenda', playero2: 'Romina', cafes: 28, facturas: 35, sandwiches: 20, promo39: 18, fastFood: 12 }
-    ];
+    function cargarDatos() {
+      // Función receptora del Callback de Apps Script
+      window.handleAppsScriptData = function(json) {
+        if (json && !json.error) {
+          datosGlobales = json;
+          document.getElementById('errorBanner').style.display = 'none';
+          renderizar();
+        } else {
+          console.error("Error devuelto por Apps Script:", json ? json.error : "Sin datos");
+          document.getElementById('errorBanner').style.display = 'block';
+        }
+      };
 
-    // Datos de muestra: Histórico
-    const datosHistorico = [
-      { fecha: '01-08-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Brenda', cafes: 140, facturas: 210, sandwiches: 45, promo39: 80, fastFood: 30 },
-      { fecha: '01-08-2026', turno: 'Tarde', playero1: 'Camila', playero2: 'Romina', cafes: 110, facturas: 150, sandwiches: 60, promo39: 55, fastFood: 42 },
-      { fecha: '02-08-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Camila', cafes: 160, facturas: 230, sandwiches: 50, promo39: 90, fastFood: 35 },
-      { fecha: '02-08-2026', turno: 'Tarde', playero1: 'Brenda', playero2: 'Romina', cafes: 100, facturas: 130, sandwiches: 55, promo39: 60, fastFood: 40 }
-    ];
+      // Limpieza de llamadas anteriores
+      const scriptExistente = document.getElementById('script-jsonp');
+      if (scriptExistente) scriptExistente.remove();
 
-    // Cambiar entre vista Curso e Histórico
-    function cambiarVista(modo) {
-      modoVista = modo;
-      document.getElementById('btn-curso').classList.toggle('active', modo === 'curso');
-      document.getElementById('btn-historico').classList.toggle('active', modo === 'historico');
+      // Inyección de script dinámico para evadir problemas de CORS
+      const script = document.createElement('script');
+      script.id = 'script-jsonp';
+      script.src = APPS_SCRIPT_URL + '?callback=handleAppsScriptData&_=' + new Date().getTime();
+      
+      script.onerror = function() {
+        console.error("Error de red al intentar conectar con la API.");
+        document.getElementById('errorBanner').style.display = 'block';
+      };
 
-      const infoBanner = document.getElementById('info-banner');
-      if (modo === 'curso') {
-        infoBanner.innerText = 'Mostrando: Mes en Curso (2026-09) - Solo días cerrados';
-        actualizarGrafico(['01-09-2026', '02-09-2026', '03-09-2026', '04-09-2026', '05-09-2026', '06-09-2026', '07-09-2026'], [2650000, 3050000, 3250000, 2900000, 1680000, 380000, 1100000]);
-        procesarUnidadesSelect(datosMesCurso);
-      } else {
-        infoBanner.innerText = 'Mostrando: Histórico Consolidado (Meses Anteriores)';
-        actualizarGrafico(['Mayo 2026', 'Junio 2026', 'Julio 2026', 'Agosto 2026'], [54000000, 58200000, 61500000, 63800000]);
-        procesarUnidadesSelect(datosHistorico);
-      }
+      document.body.appendChild(script);
     }
 
-    // Actualizar o crear gráfico
-    function actualizarGrafico(labels, data) {
-      const ctx = document.getElementById('chartVentas').getContext('2d');
-      if (chartVentasInstance) {
-        chartVentasInstance.destroy();
+    function cambiarVista(modo) {
+      modoVista = modo;
+      document.getElementById('btnActual').classList.toggle('active', modo === 'actual');
+      document.getElementById('btnHistorico').classList.toggle('active', modo === 'historico');
+      renderizar();
+    }
+
+    function renderizar() {
+      if (!datosGlobales || !datosGlobales.length) return;
+
+      const fechasValidas = datosGlobales.map(d => d.fecha).filter(Boolean);
+      const ultimaFecha = fechasValidas[fechasValidas.length - 1] || "";
+      const partesUltima = ultimaFecha.split('-');
+      const mesObjetivo = partesUltima[1];
+      const anioObjetivo = partesUltima[2];
+
+      let datosFiltrados = datosGlobales;
+      if (modoVista === 'actual' && mesObjetivo && anioObjetivo) {
+        datosFiltrados = datosGlobales.filter(d => {
+          if (!d.fecha) return false;
+          const partes = d.fecha.split('-');
+          return partes[1] === mesObjetivo && partes[2] === anioObjetivo;
+        });
       }
 
-      chartVentasInstance = new Chart(ctx, {
+      let totCafes = 0, totFacturas = 0, totSandwiches = 0, totPromo = 0, totFastFood = 0;
+      let rankingMap = {};
+
+      datosFiltrados.forEach(d => {
+        const c = Number(d.cafes) || 0;
+        const f = Number(d.facturas) || 0;
+        const s = Number(d.sandwiches) || 0;
+        const p = Number(d.promo39) || 0;
+        const ff = Number(d.fastFood) || 0;
+
+        totCafes += c;
+        totFacturas += f;
+        totSandwiches += s;
+        totPromo += p;
+        totFastFood += ff;
+
+        const totalFila = c + f + s + p + ff;
+        const playeros = [d.playero1, d.playero2].filter(Boolean);
+        if (playeros.length > 0) {
+          const cuota = totalFila / playeros.length;
+          playeros.forEach(pl => {
+            rankingMap[pl] = (rankingMap[pl] || 0) + cuota;
+          });
+        }
+      });
+
+      const diasCount = Math.max(new Set(datosFiltrados.map(d => d.fecha)).size, 1);
+
+      document.getElementById('uCafes').innerText = totCafes;
+      document.getElementById('uCafesProm').innerText = (totCafes / diasCount).toFixed(1) + '/día';
+
+      document.getElementById('uFacturas').innerText = totFacturas;
+      document.getElementById('uFacturasProm').innerText = (totFacturas / diasCount).toFixed(1) + '/día';
+
+      document.getElementById('uSandwiches').innerText = totSandwiches;
+      document.getElementById('uSandwichesProm').innerText = (totSandwiches / diasCount).toFixed(1) + '/día';
+
+      document.getElementById('uPromo').innerText = totPromo;
+      document.getElementById('uPromoProm').innerText = (totPromo / diasCount).toFixed(1) + '/día';
+
+      document.getElementById('uFastFood').innerText = totFastFood;
+      document.getElementById('uFastFoodProm').innerText = (totFastFood / diasCount).toFixed(1) + '/día';
+
+      const rankingSorted = Object.entries(rankingMap).sort((a, b) => b[1] - a[1]);
+      const tbody = document.getElementById('tablaRanking');
+      tbody.innerHTML = '';
+      rankingSorted.forEach(([nombre, cant], index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><b>${index + 1}</b></td><td>${nombre}</td><td>${Math.round(cant)} u.</td>`;
+        tbody.appendChild(tr);
+      });
+
+      renderizarGrafico(datosFiltrados);
+    }
+
+    function renderizarGrafico(datos) {
+      const ctx = document.getElementById('chartVentas').getContext('2d');
+      const agrupado = {};
+
+      datos.forEach(d => {
+        const total = (Number(d.cafes)||0) + (Number(d.facturas)||0) + (Number(d.sandwiches)||0) + (Number(d.promo39)||0) + (Number(d.fastFood)||0);
+        agrupado[d.fecha] = (agrupado[d.fecha] || 0) + total;
+      });
+
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels,
+          labels: Object.keys(agrupado),
           datasets: [{
-            data: data,
-            borderColor: '#ff9900',
-            backgroundColor: '#ff9900',
-            borderWidth: 2,
-            pointRadius: 4,
+            label: 'Unidades Vendidas',
+            data: Object.values(agrupado),
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            fill: true,
             tension: 0.3
           }]
         },
@@ -492,118 +314,15 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { color: '#1a2333' }, ticks: { color: '#8a99ad', font: { size: 10 } } },
-            y: { grid: { color: '#1a2333' }, ticks: { color: '#8a99ad' }, min: 0 }
+            x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
           }
         }
       });
     }
 
-    // Procesar datos de unidades, KPIs y tablas
-    function procesarUnidadesSelect(registros) {
-      if (!registros || registros.length === 0) return;
-
-      const hoy = new Date();
-      const mesActual = hoy.getMonth();
-      const anioActual = hoy.getFullYear();
-      const diaCerrado = hoy.getDate() - 1 || 1;
-      const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
-
-      let acumulados = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
-      let rankingCajeros = {};
-
-      const tbodyJornadas = document.getElementById('tbody-jornadas');
-      tbodyJornadas.innerHTML = '';
-
-      registros.forEach(fila => {
-        if (!fila.fecha) return;
-
-        const c = Number(fila.cafes || 0);
-        const fac = Number(fila.facturas || 0);
-        const s = Number(fila.sandwiches || 0);
-        const p = Number(fila.promo39 || 0);
-        const ff = Number(fila.fastFood || fila.fastfood || 0);
-
-        // Render fila detalle
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${fila.fecha}</td>
-          <td><span class="badge-turno">${fila.turno || '—'}</span></td>
-          <td><b>${fila.playero1 || '—'}</b></td>
-          <td>${fila.playero2 || '—'}</td>
-          <td>${c}</td>
-          <td>${fac}</td>
-          <td>${s}</td>
-          <td>${p}</td>
-          <td>${ff}</td>
-        `;
-        tbodyJornadas.appendChild(tr);
-
-        // Sumar acumulados
-        acumulados.cafes += c;
-        acumulados.facturas += fac;
-        acumulados.sandwiches += s;
-        acumulados.promo39 += p;
-        acumulados.fastfood += ff;
-
-        // Reparto 50/50 por cajero
-        let cajeros = [];
-        if (fila.playero1 && fila.playero1 !== "—") cajeros.push(fila.playero1.trim());
-        if (fila.playero2 && fila.playero2 !== "—") cajeros.push(fila.playero2.trim());
-
-        if (cajeros.length > 0) {
-          const factor = 1 / cajeros.length;
-          cajeros.forEach(caj => {
-            if (!rankingCajeros[caj]) rankingCajeros[caj] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
-            rankingCajeros[caj].cafes += (c * factor);
-            rankingCajeros[caj].facturas += (fac * factor);
-            rankingCajeros[caj].sandwiches += (s * factor);
-            rankingCajeros[caj].promo39 += (p * factor);
-            rankingCajeros[caj].fastfood += (ff * factor);
-          });
-        }
-      });
-
-      // Render KPIs
-      const factorProy = (modoVista === 'curso') ? (diasEnMes / diaCerrado) : 1;
-      ['cafes', 'facturas', 'sandwiches', 'promo39', 'fastfood'].forEach(kpi => {
-        const total = acumulados[kpi];
-        const prom = (modoVista === 'curso') ? (total / diaCerrado).toFixed(1) : (total / 30).toFixed(1);
-        const proy = Math.round(total * factorProy);
-
-        const elProy = document.getElementById(`kpi-${kpi}-proy`);
-        const elAcum = document.getElementById(`kpi-${kpi}-acum`);
-        const elProm = document.getElementById(`kpi-${kpi}-prom`);
-
-        if (elProy) elProy.innerText = proy.toLocaleString('es-AR');
-        if (elAcum) elAcum.innerText = total.toLocaleString('es-AR');
-        if (elProm) elProm.innerText = prom;
-      });
-
-      // Render Tabla Cajeros
-      const tbodyCajeros = document.getElementById('tbody-cajeros');
-      tbodyCajeros.innerHTML = '';
-      Object.keys(rankingCajeros).sort().forEach(caj => {
-        const d = rankingCajeros[caj];
-        const total = d.cafes + d.facturas + d.sandwiches + d.promo39 + d.fastfood;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><b>${caj}</b></td>
-          <td>${Math.round(d.cafes)}</td>
-          <td>${Math.round(d.facturas)}</td>
-          <td>${Math.round(d.sandwiches)}</td>
-          <td>${Math.round(d.promo39)}</td>
-          <td>${Math.round(d.fastfood)}</td>
-          <td style="color: var(--accent-cyan); font-weight: bold;">${Math.round(total)}</td>
-        `;
-        tbodyCajeros.appendChild(tr);
-      });
-    }
-
-    // Inicializar en carga
-    document.addEventListener("DOMContentLoaded", () => {
-      cambiarVista('curso');
-    });
+    // Inicio de carga al abrir la página
+    cargarDatos();
   </script>
 </body>
 </html>
