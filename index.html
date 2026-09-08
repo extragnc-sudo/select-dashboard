@@ -427,12 +427,29 @@
   </div>
 
   <script>
-    // URL Web App de Google Apps Script (Reemplazar con la tuya si aplica)
-    const APPS_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+    <script>
 
-    let chartVentasInstance = null;
-    let modoVista = 'curso'; // 'curso' o 'historico'
+/********************************************************
+ * CONFIGURACIÓN
+ ********************************************************/
 
+const APPS_SCRIPT_URL =
+  'https://script.google.com/macros/s/AKfycbxy45l4j-Z5Weu8IHSburGfBN1pYRBPPjGAn6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
+
+const ACTUALIZAR_CADA_MS = 60000;
+
+
+/********************************************************
+ * VARIABLES
+ ********************************************************/
+
+let chartVentasInstance = null;
+let modoVista = 'curso';
+let todosLosRegistros = [];
+let mesesDisponibles = [];
+let mesHistoricoSeleccionado = '';
+let datosActuales = null;
+    
     // Datos de muestra: Mes en Curso
     const datosMesCurso = [
       { fecha: '01-09-2026', turno: 'Mañana', playero1: 'Milagros', playero2: 'Brenda', cafes: 45, facturas: 80, sandwiches: 12, promo39: 25, fastFood: 8 },
