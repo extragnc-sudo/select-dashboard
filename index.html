@@ -12,7 +12,7 @@
       --text-main: #f9fafb;
       --text-muted: #9ca3af;
       --accent-blue: #38bdf8;
-      --accent-green: #34d399;
+      --badge-bg: #1e293b;
     }
 
     body {
@@ -24,7 +24,7 @@
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1300px;
       margin: 0 auto;
     }
 
@@ -41,12 +41,12 @@
       margin: 0;
     }
 
-    /* GRID DE TARJETAS KPI */
+    /* GRID DE TARJETAS KPI (ACUMULADO + PROYECCION) */
     .kpi-grid-select {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
 
     .card-kpi {
@@ -82,16 +82,17 @@
       color: var(--text-main);
     }
 
-    /* TABLA DESGLOSE POR CAJERO */
-    .panel-cajeros {
+    /* PANELES DE TABLAS */
+    .panel {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 24px;
+      padding: 20px;
+      margin-bottom: 25px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
 
-    .panel-cajeros h2 {
+    .panel h2 {
       margin-top: 0;
       font-size: 1.1rem;
       color: var(--text-main);
@@ -102,29 +103,38 @@
       overflow-x: auto;
     }
 
-    .tabla-cajeros {
+    table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       text-align: left;
     }
 
-    .tabla-cajeros th {
+    th {
       background: #1f2937;
       color: var(--text-muted);
-      padding: 12px;
+      padding: 10px 12px;
       font-weight: 600;
       border-bottom: 2px solid var(--border-color);
     }
 
-    .tabla-cajeros td {
-      padding: 12px;
+    td {
+      padding: 10px 12px;
       border-bottom: 1px solid var(--border-color);
       color: var(--text-main);
     }
 
-    .tabla-cajeros tr:hover {
+    tr:hover {
       background: #1e293b;
+    }
+
+    .badge-turno {
+      background: var(--badge-bg);
+      color: var(--accent-blue);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
     }
 
     .total-highlight {
@@ -137,10 +147,10 @@
 
   <div class="container">
     <header>
-      <h1>Control Select — Métricas Mensuales</h1>
+      <h1>Control Select — Dashboard Integral</h1>
     </header>
 
-    <!-- TARJETAS DE PROYECCIÓN Y ACUMULADOS -->
+    <!-- 1. ACUMULADOS, PROMEDIO Y PROYECCIÓN MENSUAL -->
     <div class="kpi-grid-select">
       <div class="card-kpi">
         <span class="kpi-title">Cafés / Infusiones</span>
@@ -169,11 +179,11 @@
       </div>
     </div>
 
-    <!-- TABLA RENDIMIENTO POR CAJERO -->
-    <div class="panel-cajeros">
-      <h2>Desglose Acumulado por Cajero (Mes Actual)</h2>
+    <!-- 2. DESGLOSE ACUMULADO POR CAJERO (REPARTO 50/50) -->
+    <div class="panel">
+      <h2>Acumulado Mensual por Cajero</h2>
       <div class="table-container">
-        <table class="tabla-cajeros">
+        <table>
           <thead>
             <tr>
               <th>Cajero / Operario</th>
@@ -186,68 +196,101 @@
             </tr>
           </thead>
           <tbody id="body-tabla-cajeros">
-            <!-- Se completa dinámicamente -->
+            <!-- Datos acumulados por cajero -->
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- 3. DETALLE DE VENTAS POR JORNADA Y TURNO -->
+    <div class="panel">
+      <h2>Detalle de Ventas por Jornada</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Turno</th>
+              <th>Cajero 1</th>
+              <th>Cajero 2</th>
+              <th>Cafés</th>
+              <th>Facturas</th>
+              <th>Sándwiches</th>
+              <th>Promos 039</th>
+              <th>Fast Food</th>
+            </tr>
+          </thead>
+          <tbody id="body-tabla-jornadas">
+            <!-- Detalle fila por fila -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    // Procesamiento y renderizado del Dashboard
     function actualizarDashboardSelect(registrosHoja) {
       const hoy = new Date();
       const mesActual = hoy.getMonth();
       const anioActual = hoy.getFullYear();
       
-      // Cálculo a día cerrado anterior
       const diaCerrado = hoy.getDate() - 1; 
       const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
 
       let acumulados = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastFood: 0 };
       let rankingCajeros = {};
 
+      const tbodyJornadas = document.getElementById('body-tabla-jornadas');
+      tbodyJornadas.innerHTML = '';
+
       registrosHoja.forEach(fila => {
         if (!fila.fecha) return;
 
-        // Parseo de fecha seguro
         const partesFecha = fila.fecha.split('-');
-        let f;
-        if (partesFecha.length === 3) {
-          f = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]);
-        } else {
-          f = new Date(fila.fecha);
-        }
+        let f = partesFecha.length === 3 ? new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]) : new Date(fila.fecha);
 
-        // Filtrar mes actual hasta día cerrado
+        const c = Number(fila.cafes || 0);
+        const fac = Number(fila.facturas || 0);
+        const s = Number(fila.sandwiches || 0);
+        const p = Number(fila.promo39 || 0);
+        const ff = Number(fila.fastFood || 0);
+
+        // A. Cargar fila en el Detalle por Jornada
+        const trJornada = document.createElement('tr');
+        trJornada.innerHTML = `
+          <td>${fila.fecha}</td>
+          <td><span class="badge-turno">${fila.turno || '—'}</span></td>
+          <td>${fila.playero1 || '—'}</td>
+          <td>${fila.playero2 || '—'}</td>
+          <td>${c}</td>
+          <td>${fac}</td>
+          <td>${s}</td>
+          <td>${p}</td>
+          <td>${ff}</td>
+        `;
+        tbodyJornadas.appendChild(trJornada);
+
+        // B. Calcular acumulados del mes a día cerrado
         if (f.getMonth() === mesActual && f.getFullYear() === anioActual && f.getDate() <= diaCerrado) {
           
-          const c = Number(fila.cafes || 0);
-          const fac = Number(fila.facturas || 0);
-          const s = Number(fila.sandwiches || 0);
-          const p = Number(fila.promo39 || 0);
-          const ff = Number(fila.fastFood || 0);
-
-          // Suma acumulada general
           acumulados.cafes += c;
           acumulados.facturas += fac;
           acumulados.sandwiches += s;
           acumulados.promo39 += p;
           acumulados.fastFood += ff;
 
-          // Reparto proporcional entre cajeros del turno
           let cajeros = [];
           if (fila.playero1 && fila.playero1.trim() !== "" && fila.playero1 !== "—") cajeros.push(fila.playero1.trim());
           if (fila.playero2 && fila.playero2.trim() !== "" && fila.playero2 !== "—") cajeros.push(fila.playero2.trim());
 
           if (cajeros.length > 0) {
-            const factor = 1 / cajeros.length; // 1 si es solo 1 cajero, 0.5 si es dupla
+            const factor = 1 / cajeros.length;
 
             cajeros.forEach(cajero => {
               if (!rankingCajeros[cajero]) {
                 rankingCajeros[cajero] = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastFood: 0 };
               }
-
               rankingCajeros[cajero].cafes += (c * factor);
               rankingCajeros[cajero].facturas += (fac * factor);
               rankingCajeros[cajero].sandwiches += (s * factor);
@@ -258,7 +301,7 @@
         }
       });
 
-      // RENDERIZAR TARJETAS KPI
+      // C. Renderizar Tarjetas KPI
       const factorProy = diaCerrado > 0 ? (diasEnMes / diaCerrado) : 0;
       const kpis = ['cafes', 'facturas', 'sandwiches', 'promo39', 'fastFood'];
 
@@ -272,16 +315,16 @@
         document.getElementById(`kpi-${kpi}-prom`).innerText = prom;
       });
 
-      // RENDERIZAR TABLA DE CAJEROS
-      const tbody = document.getElementById('body-tabla-cajeros');
-      tbody.innerHTML = '';
+      // D. Renderizar Tabla de Cajeros
+      const tbodyCajeros = document.getElementById('body-tabla-cajeros');
+      tbodyCajeros.innerHTML = '';
 
       Object.keys(rankingCajeros).sort().forEach(cajero => {
         const d = rankingCajeros[cajero];
         const totalCajero = d.cafes + d.facturas + d.sandwiches + d.promo39 + d.fastFood;
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+        const trCajero = document.createElement('tr');
+        trCajero.innerHTML = `
           <td><b>${cajero}</b></td>
           <td>${Math.round(d.cafes)}</td>
           <td>${Math.round(d.facturas)}</td>
@@ -290,16 +333,9 @@
           <td>${Math.round(d.fastFood)}</td>
           <td class="total-highlight">${Math.round(totalCajero)}</td>
         `;
-        tbody.appendChild(tr);
+        tbodyCajeros.appendChild(trCajero);
       });
     }
-
-    // Ejemplo de llamada/conectar con tu Endpoint/Google Sheet
-    /*
-    fetch('URL_DE_TU_WEB_APP_O_JSON')
-      .then(res => res.json())
-      .then(data => actualizarDashboardSelect(data));
-    */
   </script>
 </body>
 </html>
