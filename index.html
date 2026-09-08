@@ -1,4 +1,67 @@
-<script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DASHBOARD - SELECT</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .error-banner { background-color: #ef4444; color: white; padding: 12px; border-radius: 6px; margin-bottom: 20px; display: none; }
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .card { background-color: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
+    .card-title { font-size: 0.75rem; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
+    .card-value { font-size: 1.5rem; font-weight: bold; color: #f59e0b; margin: 8px 0; }
+    .card-sub { font-size: 0.8rem; color: #64748b; }
+    .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    .panel { background-color: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; }
+    .chart-container { height: 300px; position: relative; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #334155; font-size: 0.9rem; }
+    th { color: #94a3b8; }
+    .btn-group button { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+    .btn-group button.active { background: #f59e0b; color: #0f172a; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div id="errorBanner" class="error-banner">Error al conectar con Maestra Select. Verifica APPS_SCRIPT_URL.</div>
+
+  <div class="header">
+    <div>
+      <h1 style="margin:0;">DASHBOARD - SELECT</h1>
+      <small style="color:#94a3b8;">Control de Ventas & Rendimiento de Tienda</small>
+    </div>
+    <div class="btn-group">
+      <button id="btnActual" class="active" onclick="cambiarVista('actual')">Mes en Curso</button>
+      <button id="btnHistorico" onclick="cambiarVista('historico')">Histórico</button>
+    </div>
+  </div>
+
+  <div class="grid-cards">
+    <div class="card"><div class="card-title">Cafés</div><div id="uCafes" class="card-value">0</div><div class="card-sub">Prom: <span id="uCafesProm">0/día</span></div></div>
+    <div class="card"><div class="card-title">Facturas</div><div id="uFacturas" class="card-value">0</div><div class="card-sub">Prom: <span id="uFacturasProm">0/día</span></div></div>
+    <div class="card"><div class="card-title">Sandwiches</div><div id="uSandwiches" class="card-value">0</div><div class="card-sub">Prom: <span id="uSandwichesProm">0/día</span></div></div>
+    <div class="card"><div class="card-title">Promo 39</div><div id="uPromo" class="card-value">0</div><div class="card-sub">Prom: <span id="uPromoProm">0/día</span></div></div>
+    <div class="card"><div class="card-title">Fast Food</div><div id="uFastFood" class="card-value">0</div><div class="card-sub">Prom: <span id="uFastFoodProm">0/día</span></div></div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <h3 style="margin-top:0;">EVOLUCIÓN DE VENTAS DIARIAS</h3>
+      <div class="chart-container"><canvas id="chartVentas"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3 style="margin-top:0;">RANKING DEL MES</h3>
+      <table>
+        <thead><tr><th>#</th><th>Personal</th><th>Unidades</th></tr></thead>
+        <tbody id="tablaRanking"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45I4j-Z5Weu8IHSburgFbN1pYRBPJGaN6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
 
     let datosGlobales = [];
@@ -6,32 +69,25 @@
     let modoVista = 'actual';
 
     function cargarDatos() {
-      // Definimos la función global que procesará la respuesta de Apps Script
       window.handleAppsScriptData = function(json) {
         if (json && !json.error) {
           datosGlobales = json;
           document.getElementById('errorBanner').style.display = 'none';
           renderizar();
         } else {
-          console.error("Error retornado por Apps Script:", json ? json.error : "Respuesta vacía");
           document.getElementById('errorBanner').style.display = 'block';
         }
       };
 
-      // Limpiar llamadas previas si existieran
       const scriptViejo = document.getElementById('script-jsonp');
       if (scriptViejo) scriptViejo.remove();
 
-      // Inyectar etiqueta de script para bypass de CORS vía JSONP
       const script = document.createElement('script');
       script.id = 'script-jsonp';
       script.src = APPS_SCRIPT_URL + '?callback=handleAppsScriptData&_=' + new Date().getTime();
-      
       script.onerror = function() {
-        console.error("Error de red al intentar cargar el script de Google");
         document.getElementById('errorBanner').style.display = 'block';
       };
-
       document.body.appendChild(script);
     }
 
@@ -70,42 +126,27 @@
         const p = Number(d.promo39) || 0;
         const ff = Number(d.fastFood) || 0;
 
-        totCafes += c;
-        totFacturas += f;
-        totSandwiches += s;
-        totPromo += p;
-        totFastFood += ff;
+        totCafes += c; totFacturas += f; totSandwiches += s; totPromo += p; totFastFood += ff;
 
         const totalFila = c + f + s + p + ff;
         const playeros = [d.playero1, d.playero2].filter(Boolean);
         if (playeros.length > 0) {
           const cuota = totalFila / playeros.length;
-          playeros.forEach(pl => {
-            rankingMap[pl] = (rankingMap[pl] || 0) + cuota;
-          });
+          playeros.forEach(pl => { rankingMap[pl] = (rankingMap[pl] || 0) + cuota; });
         }
       });
 
       const diasCount = Math.max(new Set(datosFiltrados.map(d => d.fecha)).size, 1);
 
       document.getElementById('uCafes').innerText = totCafes;
-      document.getElementById('uCafesAcum').innerText = totCafes;
       document.getElementById('uCafesProm').innerText = (totCafes / diasCount).toFixed(1) + '/día';
-
       document.getElementById('uFacturas').innerText = totFacturas;
-      document.getElementById('uFacturasAcum').innerText = totFacturas;
       document.getElementById('uFacturasProm').innerText = (totFacturas / diasCount).toFixed(1) + '/día';
-
       document.getElementById('uSandwiches').innerText = totSandwiches;
-      document.getElementById('uSandwichesAcum').innerText = totSandwiches;
       document.getElementById('uSandwichesProm').innerText = (totSandwiches / diasCount).toFixed(1) + '/día';
-
       document.getElementById('uPromo').innerText = totPromo;
-      document.getElementById('uPromoAcum').innerText = totPromo;
       document.getElementById('uPromoProm').innerText = (totPromo / diasCount).toFixed(1) + '/día';
-
       document.getElementById('uFastFood').innerText = totFastFood;
-      document.getElementById('uFastFoodAcum').innerText = totFastFood;
       document.getElementById('uFastFoodProm').innerText = (totFastFood / diasCount).toFixed(1) + '/día';
 
       const rankingSorted = Object.entries(rankingMap).sort((a, b) => b[1] - a[1]);
@@ -122,25 +163,21 @@
 
     function renderizarGrafico(datos) {
       const ctx = document.getElementById('chartVentas').getContext('2d');
-      
       const agrupado = {};
       datos.forEach(d => {
         const total = (Number(d.cafes)||0) + (Number(d.facturas)||0) + (Number(d.sandwiches)||0) + (Number(d.promo39)||0) + (Number(d.fastFood)||0);
         agrupado[d.fecha] = (agrupado[d.fecha] || 0) + total;
       });
 
-      const labels = Object.keys(agrupado);
-      const values = Object.values(agrupado);
-
       if (chartInstance) chartInstance.destroy();
 
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels,
+          labels: Object.keys(agrupado),
           datasets: [{
             label: 'Unidades Vendidas',
-            data: values,
+            data: Object.values(agrupado),
             borderColor: '#38bdf8',
             backgroundColor: 'rgba(56, 189, 248, 0.1)',
             fill: true,
@@ -159,6 +196,7 @@
       });
     }
 
-    // Iniciar la carga
     cargarDatos();
   </script>
+</body>
+</html>
