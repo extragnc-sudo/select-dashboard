@@ -1,285 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DASHBOARD - SELECT</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
-  <style>
-    :root {
-      --bg-dark: #0f172a;
-      --card-bg: #1e293b;
-      --accent-yellow: #f59e0b;
-      --accent-blue: #38bdf8;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      padding: 20px;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .title-area h1 {
-      font-size: 1.8rem;
-      color: var(--text-main);
-      letter-spacing: 1px;
-    }
-
-    .title-area p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .toggle-container {
-      display: flex;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .toggle-btn {
-      padding: 10px 20px;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-
-    .toggle-btn.active {
-      background: var(--accent-yellow);
-      color: #000;
-    }
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 18px;
-    }
-
-    .card-title {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-
-    .card-value {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: var(--accent-yellow);
-    }
-
-    .card-value.blue {
-      color: var(--accent-blue);
-    }
-
-    .card-subtext {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 5px;
-    }
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 25px;
-    }
-
-    @media (max-width: 900px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .chart-card {
-      min-height: 350px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .units-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 15px;
-    }
-
-    .unit-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 15px;
-    }
-
-    .unit-card .card-value {
-      font-size: 1.4rem;
-      color: var(--accent-blue);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      text-align: left;
-      padding: 10px;
-      font-size: 0.85rem;
-    }
-
-    th {
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    td {
-      border-bottom: 1px solid #2d3748;
-    }
-
-    .error-banner {
-      display: none;
-      background: #7f1d1d;
-      color: #fca5a5;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: 0.9rem;
-    }
-  </style>
-</head>
-<body>
-
-  <div id="errorBanner" class="error-banner">
-    Error al conectar con Maestra Select. Verifica APPS_SCRIPT_URL.
-  </div>
-
-  <header>
-    <div class="title-area">
-      <h1>DASHBOARD - SELECT</h1>
-      <p>Control de Ventas & Rendimiento de Tienda</p>
-    </div>
-    <div class="toggle-container">
-      <button id="btnActual" class="toggle-btn active" onclick="cambiarVista('actual')">Mes en Curso</button>
-      <button id="btnHistorico" class="toggle-btn" onclick="cambiarVista('historico')">Histórico</button>
-    </div>
-  </header>
-
-  <!-- BLOQUE KPI SUPERIOR -->
-  <div class="kpi-grid">
-    <div class="card">
-      <div class="card-title">PROYECCIÓN VENTA MES</div>
-      <div class="card-value" id="kpiProyeccion">$ 0</div>
-      <div class="card-subtext">Acum: <b id="kpiAcumulado">$ 0</b> | Prom: <b id="kpiPromedio">$ 0</b></div>
-    </div>
-    <div class="card">
-      <div class="card-title">SHELL BOX ACUMULADO</div>
-      <div class="card-value" id="kpiShellBox">$ 0</div>
-      <div class="card-subtext">Cobros por App</div>
-    </div>
-    <div class="card">
-      <div class="card-title">TARJETAS ACUMULADO</div>
-      <div class="card-value" id="kpiTarjetas">$ 0</div>
-      <div class="card-subtext">Débito / Crédito</div>
-    </div>
-    <div class="card">
-      <div class="card-title">CTAS / CTES ACUMULADO</div>
-      <div class="card-value" id="kpiCtasCtes">$ 0</div>
-      <div class="card-subtext">Cuentas Corrientes</div>
-    </div>
-    <div class="card">
-      <div class="card-title">MERCADO PAGO</div>
-      <div class="card-value blue" id="kpiMercadoPago">$ 0</div>
-      <div class="card-subtext">Cobros QR</div>
-    </div>
-  </div>
-
-  <!-- SECCIÓN CENTRAL DE GRÁFICO Y RANKING -->
-  <div class="main-grid">
-    <div class="card chart-card">
-      <div class="card-title">EVOLUCIÓN DE VENTAS DIARIAS</div>
-      <div style="flex-grow: 1; position: relative;">
-        <canvas id="chartVentas"></canvas>
-      </div>
-    </div>
-    <div class="card chart-card">
-      <div class="card-title">RANKING DEL MES (SHELL BOX)</div>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Personal</th>
-            <th>Unidades / Operaciones</th>
-          </tr>
-        </thead>
-        <tbody id="tablaRanking">
-          <!-- Carga dinámica -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- BLOQUE UNIDADES / PRODUCTOS -->
-  <div class="units-grid">
-    <div class="unit-card">
-      <div class="card-title">CAFÉS / INFUSIONES</div>
-      <div class="card-value" id="uCafes">0</div>
-      <div class="card-subtext">Acum: <b id="uCafesAcum">0</b> | Prom: <b id="uCafesProm">0/día</b></div>
-    </div>
-    <div class="unit-card">
-      <div class="card-title">FACTURAS / MEDIALUNAS</div>
-      <div class="card-value" id="uFacturas">0</div>
-      <div class="card-subtext">Acum: <b id="uFacturasAcum">0</b> | Prom: <b id="uFacturasProm">0/día</b></div>
-    </div>
-    <div class="unit-card">
-      <div class="card-title">SÁNDWICHES</div>
-      <div class="card-value" id="uSandwiches">0</div>
-      <div class="card-subtext">Acum: <b id="uSandwichesAcum">0</b> | Prom: <b id="uSandwichesProm">0/día</b></div>
-    </div>
-    <div class="unit-card">
-      <div class="card-title">PROMO SERVICOMPRAS</div>
-      <div class="card-value" id="uPromo">0</div>
-      <div class="card-subtext">Acum: <b id="uPromoAcum">0</b> | Prom: <b id="uPromoProm">0/día</b></div>
-    </div>
-    <div class="unit-card">
-      <div class="card-title">FAST FOOD / PLATOS</div>
-      <div class="card-value" id="uFastFood">0</div>
-      <div class="card-subtext">Acum: <b id="uFastFoodAcum">0</b> | Prom: <b id="uFastFoodProm">0/día</b></div>
-    </div>
-  </div>
-
 <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45I4j-Z5Weu8IHSburgFbN1pYRBPJGaN6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
 
@@ -287,30 +5,34 @@
     let chartInstance = null;
     let modoVista = 'actual';
 
-    async function cargarDatos() {
-      try {
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: 'GET',
-          redirect: 'follow'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Error en la respuesta de la red');
+    function cargarDatos() {
+      // Definimos la función global que procesará la respuesta de Apps Script
+      window.handleAppsScriptData = function(json) {
+        if (json && !json.error) {
+          datosGlobales = json;
+          document.getElementById('errorBanner').style.display = 'none';
+          renderizar();
+        } else {
+          console.error("Error retornado por Apps Script:", json ? json.error : "Respuesta vacía");
+          document.getElementById('errorBanner').style.display = 'block';
         }
+      };
 
-        const json = await response.json();
+      // Limpiar llamadas previas si existieran
+      const scriptViejo = document.getElementById('script-jsonp');
+      if (scriptViejo) scriptViejo.remove();
 
-        if (json.error) {
-          throw new Error(json.error);
-        }
-
-        datosGlobales = json;
-        document.getElementById('errorBanner').style.display = 'none';
-        renderizar();
-      } catch (err) {
-        console.error("Error al cargar datos:", err);
+      // Inyectar etiqueta de script para bypass de CORS vía JSONP
+      const script = document.createElement('script');
+      script.id = 'script-jsonp';
+      script.src = APPS_SCRIPT_URL + '?callback=handleAppsScriptData&_=' + new Date().getTime();
+      
+      script.onerror = function() {
+        console.error("Error de red al intentar cargar el script de Google");
         document.getElementById('errorBanner').style.display = 'block';
-      }
+      };
+
+      document.body.appendChild(script);
     }
 
     function cambiarVista(modo) {
@@ -321,11 +43,10 @@
     }
 
     function renderizar() {
-      if (!datosGlobales.length) return;
+      if (!datosGlobales || !datosGlobales.length) return;
 
-      // Obtener el mes y año del registro más reciente en la base de datos
-      const fechasUnicas = [...new Set(datosGlobales.map(d => d.fecha).filter(Boolean))];
-      const ultimaFecha = fechasUnicas[fechasUnicas.length - 1] || "";
+      const fechasValidas = datosGlobales.map(d => d.fecha).filter(Boolean);
+      const ultimaFecha = fechasValidas[fechasValidas.length - 1] || "";
       const partesUltima = ultimaFecha.split('-');
       const mesObjetivo = partesUltima[1];
       const anioObjetivo = partesUltima[2];
@@ -438,5 +159,6 @@
       });
     }
 
+    // Iniciar la carga
     cargarDatos();
   </script>
