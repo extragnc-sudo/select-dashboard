@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DASHBOARD - SELECT (Constituyentes 1806)</title>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg-main: #0a0d14;
@@ -32,7 +30,7 @@
       padding: 24px;
     }
 
-    /* PANTALLA DE BLOQUEO / LOGIN */
+    /* PANTALLA DE ACCESO RESTRINGIDO */
     #auth-screen {
       display: flex;
       flex-direction: column;
@@ -88,9 +86,7 @@
       transition: opacity 0.2s;
     }
 
-    .auth-btn:hover {
-      opacity: 0.9;
-    }
+    .auth-btn:hover { opacity: 0.9; }
 
     .auth-error {
       color: var(--danger);
@@ -99,7 +95,7 @@
       display: none;
     }
 
-    /* CONTENEDOR PRINCIPAL (OCULTO HASTA VALIDAR) */
+    /* CONTENEDOR PRINCIPAL */
     .container {
       max-width: 1400px;
       margin: 0 auto;
@@ -167,7 +163,7 @@
       align-items: center;
     }
 
-    /* GRID KPIS MONETARIOS */
+    /* GRID KPIS UNIDADES */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -195,12 +191,8 @@
       font-size: 1.6rem;
       font-weight: 800;
       margin-bottom: 12px;
+      color: var(--accent-cyan);
     }
-
-    .val-orange { color: var(--accent-orange); }
-    .val-white { color: #ffffff; }
-    .val-blue { color: var(--accent-blue); }
-    .val-cyan { color: var(--accent-cyan); }
 
     .kpi-card-sub {
       font-size: 0.75rem;
@@ -211,19 +203,13 @@
       color: #ffffff;
     }
 
-    /* PANEL PRINCIPAL */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
+    /* PANELES Y TABLAS */
     .panel-box {
       background: var(--bg-card);
       border: 1px solid var(--bg-card-border);
       border-radius: 10px;
       padding: 20px;
+      margin-bottom: 20px;
     }
 
     .panel-box h3 {
@@ -235,48 +221,6 @@
       color: #ffffff;
     }
 
-    .ranking-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      max-height: 260px;
-      overflow-y: auto;
-    }
-
-    .ranking-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.88rem;
-    }
-
-    .ranking-user {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ranking-num {
-      font-weight: 800;
-      color: #ffffff;
-    }
-
-    .ranking-name {
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .ranking-metrics {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .ranking-val {
-      color: var(--accent-orange);
-      font-weight: 800;
-    }
-
-    /* TABLAS */
     .table-container {
       overflow-x: auto;
       max-height: 350px;
@@ -308,9 +252,7 @@
       color: var(--text-main);
     }
 
-    tr:hover {
-      background: #1a2333;
-    }
+    tr:hover { background: #1a2333; }
 
     .badge-turno {
       background: var(--badge-bg);
@@ -323,7 +265,6 @@
 
     @media (max-width: 1024px) {
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .main-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -333,7 +274,7 @@
   <div id="auth-screen">
     <div class="auth-card">
       <h2>Acceso Restringido</h2>
-      <p>Dashboard Administrativo - Constituyentes 1806 SA</p>
+      <p>Dashboard Operativo - Constituyentes 1806 SA</p>
       <input type="email" id="email-input" class="auth-input" placeholder="Ingrese correo autorizado..." />
       <button class="auth-btn" onclick="validarAcceso()">Ingresar</button>
       <div id="auth-error" class="auth-error">Acceso denegado. Correo no autorizado.</div>
@@ -346,13 +287,12 @@
     <!-- HEADER -->
     <header>
       <div class="header-title">
-        <h1>DASHBOARD - SELECT</h1>
-        <p>Control de Ventas & Rendimiento de Tienda</p>
+        <h1>DASHBOARD - SELECT (UNIDADES)</h1>
+        <p>Control de Rendimiento Operativo de Tienda</p>
       </div>
 
       <div style="display: flex; gap: 12px; align-items: center;">
         <select id="select-mes-historico" style="display: none; background: #111622; color: #fff; border: 1px solid var(--bg-card-border); padding: 8px; border-radius: 6px;" onchange="renderizarVistaActual()">
-          <!-- Opciones de meses históricos -->
         </select>
         <div class="nav-toggle">
           <button class="btn-toggle active" id="btn-curso" onclick="cambiarVista('curso')">Mes en Curso</button>
@@ -363,89 +303,41 @@
 
     <!-- BANNER INFORMATIVO -->
     <div class="info-bar" id="info-banner">
-      <span>Mostrando: Cargando información a día cerrado...</span>
+      <span>Mostrando: Cargando información...</span>
       <span id="user-logged-info" style="font-size: 0.75rem; color: var(--accent-orange);"></span>
     </div>
 
-    <!-- KPIS MONETARIOS -->
+    <!-- KPIS UNIDADES SELECT -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-card-title">PROYECCIÓN VENTA MES</div>
-        <div class="kpi-card-value val-orange" id="kpi-proy-venta">$ 0</div>
-        <div class="kpi-card-sub">Acum: <b id="kpi-acum-venta">$ 0</b> &nbsp; Prom: <b id="kpi-prom-venta">$ 0</b></div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">SHELL BOX ACUMULADO</div>
-        <div class="kpi-card-value val-orange" id="kpi-shellbox">$ 0</div>
-        <div class="kpi-card-sub">Cobros por App</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">TARJETAS ACUMULADO</div>
-        <div class="kpi-card-value val-white" id="kpi-tarjetas">$ 0</div>
-        <div class="kpi-card-sub">Débito / Crédito</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">CTAS / CTES ACUMULADO</div>
-        <div class="kpi-card-value val-white" id="kpi-ctas">$ 0</div>
-        <div class="kpi-card-sub">Cuentas Corrientes</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-title">MERCADO PAGO</div>
-        <div class="kpi-card-value val-blue" id="kpi-mp">$ 0</div>
-        <div class="kpi-card-sub">Cobros QR</div>
-      </div>
-    </div>
-
-    <!-- GRÁFICO + RANKING SHELL BOX -->
-    <div class="main-grid">
-      <div class="panel-box">
-        <h3 id="chart-title">EVOLUCIÓN DE VENTAS DIARIAS (DÍAS CERRADOS)</h3>
-        <div style="height: 280px; width: 100%;">
-          <canvas id="chartVentas"></canvas>
-        </div>
-      </div>
-
-      <div class="panel-box">
-        <h3 id="ranking-title">RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
-        <div class="ranking-list" id="ranking-shellbox"></div>
-      </div>
-    </div>
-
-    <!-- KPIS UNIDADES SELECT -->
-    <div class="kpi-grid" style="margin-bottom: 20px;">
-      <div class="kpi-card">
         <div class="kpi-card-title">CAFÉS / INFUSIONES</div>
-        <div class="kpi-card-value val-cyan" id="kpi-cafes-proy">0</div>
+        <div class="kpi-card-value" id="kpi-cafes-proy">0</div>
         <div class="kpi-card-sub">Acum: <b id="kpi-cafes-acum">0</b> | Prom: <b id="kpi-cafes-prom">0</b>/día</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card-title">FACTURAS / MEDIALUNAS</div>
-        <div class="kpi-card-value val-cyan" id="kpi-facturas-proy">0</div>
+        <div class="kpi-card-value" id="kpi-facturas-proy">0</div>
         <div class="kpi-card-sub">Acum: <b id="kpi-facturas-acum">0</b> | Prom: <b id="kpi-facturas-prom">0</b>/día</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card-title">SÁNDWICHES</div>
-        <div class="kpi-card-value val-cyan" id="kpi-sandwiches-proy">0</div>
+        <div class="kpi-card-value" id="kpi-sandwiches-proy">0</div>
         <div class="kpi-card-sub">Acum: <b id="kpi-sandwiches-acum">0</b> | Prom: <b id="kpi-sandwiches-prom">0</b>/día</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card-title">PROMO SERVICOMPRAS</div>
-        <div class="kpi-card-value val-cyan" id="kpi-promo39-proy">0</div>
+        <div class="kpi-card-value" id="kpi-promo39-proy">0</div>
         <div class="kpi-card-sub">Acum: <b id="kpi-promo39-acum">0</b> | Prom: <b id="kpi-promo39-prom">0</b>/día</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card-title">FAST FOOD / PLATOS</div>
-        <div class="kpi-card-value val-cyan" id="kpi-fastfood-proy">0</div>
+        <div class="kpi-card-value" id="kpi-fastfood-proy">0</div>
         <div class="kpi-card-sub">Acum: <b id="kpi-fastfood-acum">0</b> | Prom: <b id="kpi-fastfood-prom">0</b>/día</div>
       </div>
     </div>
 
     <!-- ACUMULADO MENSUAL POR CAJERO (50/50) -->
-    <div class="panel-box" style="margin-bottom: 20px;">
+    <div class="panel-box">
       <h3>ACUMULADO MENSUAL POR CAJERO (UNIDADES)</h3>
       <div class="table-container">
         <table>
@@ -467,7 +359,7 @@
 
     <!-- DETALLE DE VENTAS POR JORNADA -->
     <div class="panel-box">
-      <h3>DETALLE DE VENTAS POR JORNADA (DÍAS CERRADOS)</h3>
+      <h3>DETALLE DE UNIDADES POR JORNADA (DÍAS CERRADOS)</h3>
       <div class="table-container">
         <table>
           <thead>
@@ -491,23 +383,15 @@
   </div>
 
   <script>
-    /********************************************************
-     * CONFIGURACIÓN & VARIABLES
-     ********************************************************/
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45l4j-Z5Weu8IHSburGfBN1pYRBPPjGAn6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
     const CORREO_AUTORIZADO = 'Planillas1806@gmail.com';
     const ACTUALIZAR_CADA_MS = 60000;
 
-    let chartVentasInstance = null;
     let modoVista = 'curso';
     let todosLosRegistros = [];
     let mesesDisponibles = [];
 
-    /********************************************************
-     * SISTEMA DE VALIDACIÓN DE ACCESO
-     ********************************************************/
     document.addEventListener('DOMContentLoaded', () => {
-      // Verificar si ya inició sesión en esta pestaña (localStorage)
       const guardado = localStorage.getItem('auth_user_1806');
       if (guardado === CORREO_AUTORIZADO) {
         permitirAcceso(guardado);
@@ -535,13 +419,9 @@
       setInterval(cargarDatos, ACTUALIZAR_CADA_MS);
     }
 
-    /********************************************************
-     * FORMATEADORES
-     ********************************************************/
     function numero(valor) {
       if (valor === null || valor === undefined || valor === '') return 0;
       if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
-
       let texto = String(valor).trim().replace(/\$/g, '').replace(/\s/g, '');
       if (texto.includes(',') && texto.includes('.')) {
         texto = texto.replace(/\./g, '').replace(',', '.');
@@ -552,25 +432,13 @@
       return isNaN(resultado) ? 0 : resultado;
     }
 
-    function formatoMoneda(valor) {
-      return numero(valor).toLocaleString('es-AR', {
-        style: 'currency',
-        currency: 'ARS',
-        maximumFractionDigits: 0
-      });
-    }
-
     function formatoNumero(valor) {
       return Math.round(numero(valor)).toLocaleString('es-AR');
     }
 
-    /********************************************************
-     * FECHAS & FILTRADO DE DÍA CERRADO
-     ********************************************************/
     function obtenerFecha(fecha) {
       if (!fecha) return null;
       if (fecha instanceof Date) return fecha;
-
       const texto = String(fecha).trim();
       if (/^\d{4}-\d{2}-\d{2}/.test(texto)) {
         const partes = texto.substring(0, 10).split('-');
@@ -584,7 +452,6 @@
         const partes = texto.substring(0, 10).split('-');
         return new Date(Number(partes[2]), Number(partes[1]) - 1, Number(partes[0]));
       }
-
       const fechaNueva = new Date(texto);
       return isNaN(fechaNueva.getTime()) ? null : fechaNueva;
     }
@@ -592,18 +459,14 @@
     function claveMes(fecha) {
       const d = obtenerFecha(fecha);
       if (!d) return '';
-      const anio = d.getFullYear();
-      const mes = String(d.getMonth() + 1).padStart(2, '0');
-      return `${anio}-${mes}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     }
 
     function nombreMes(clave) {
       if (!clave) return '';
       const partes = clave.split('-');
-      const anio = Number(partes[0]);
-      const mes = Number(partes[1]) - 1;
       const nombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-      return `${nombres[mes]} ${anio}`;
+      return `${nombres[Number(partes[1]) - 1]} ${partes[0]}`;
     }
 
     function formatoFecha(fecha) {
@@ -612,67 +475,48 @@
       return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
 
-    /********************************************************
-     * CARGA Y NORMALIZACIÓN DE DATOS
-     ********************************************************/
     async function cargarDatos() {
       try {
-        const respuesta = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), {
-          method: 'GET',
-          redirect: 'follow'
-        });
-
+        const respuesta = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), { method: 'GET', redirect: 'follow' });
         if (!respuesta.ok) throw new Error('Error HTTP: ' + respuesta.status);
 
         const json = await respuesta.json();
         let registros = Array.isArray(json) ? json : (json.registros || json.data || json.datos || []);
 
-        todosLosRegistros = registros
-          .map(normalizarRegistro)
-          .filter(r => r !== null);
+        todosLosRegistros = registros.map(normalizarRegistro).filter(r => r !== null);
 
         if (todosLosRegistros.length === 0) {
-          document.getElementById('info-banner').querySelector('span').innerText = 'No se encontraron registros de días cerrados.';
+          document.getElementById('info-banner').querySelector('span').innerText = 'No se encontraron registros.';
           return;
         }
 
         actualizarMesesDisponibles();
         renderizarVistaActual();
-
       } catch (error) {
         console.error('Error al cargar datos:', error);
-        document.getElementById('info-banner').querySelector('span').innerText = 'Error al conectar con los datos del servidor.';
+        document.getElementById('info-banner').querySelector('span').innerText = 'Error al conectar con los datos.';
       }
     }
 
     function normalizarRegistro(fila) {
-      // Soporta nombres de columnas de Apps Script (letras o nombres directos)
       const fechaObj = obtenerFecha(fila.fecha ?? fila.Fecha ?? fila.A ?? fila['Fecha (c3)']);
       if (!fechaObj) return null;
 
-      // REGLA CRÍTICA: FILTRAR HASTA EL DÍA ANTERIOR (DÍA CERRADO)
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
-      
       const fechaEval = new Date(fechaObj.getTime());
       fechaEval.setHours(0, 0, 0, 0);
 
       if (fechaEval >= hoy) return null;
 
+      const p1 = String(fila.cajero1 ?? fila.Cajero1 ?? fila.playero1 ?? fila.D ?? fila['Cajero1(f3)'] ?? '').trim();
+      const p2 = String(fila.cajero2 ?? fila.Cajero2 ?? fila.playero2 ?? fila.E ?? fila['Cajero2(f4)'] ?? '').trim();
+
       return {
         fecha: fechaObj,
-        planilla: fila.planilla ?? fila.Planilla ?? fila.B ?? '',
         turno: fila.turno ?? fila.Turno ?? fila.C ?? '',
-        playero1: fila.cajero1 ?? fila.Cajero1 ?? fila.playero1 ?? fila.D ?? fila['Cajero1(f3)'] ?? '',
-        playero2: fila.cajero2 ?? fila.Cajero2 ?? fila.playero2 ?? fila.E ?? fila['Cajero2(f4)'] ?? '',
-        ventaTotal: numero(fila.ventaTotal ?? fila['Venta Total'] ?? fila.F ?? fila['Vta Total (R11)'] ?? 0),
-        shellBox: numero(fila.shellBox ?? fila['Shell Box'] ?? fila.G ?? fila['Shell Box(R6)'] ?? 0),
-        mercadoPago: numero(fila.mercadoPago ?? fila['Mercado Pago'] ?? fila.H ?? fila['Mercado PAgo(R7)'] ?? 0),
-        ctasCtes: numero(fila.ctasCtes ?? fila['Ctas/Ctes'] ?? fila.I ?? fila['Ctas/ctes(R8)'] ?? 0),
-        tarjetas: numero(fila.tarjetas ?? fila.Tarjetas ?? fila.J ?? fila['Tarjetas(R9)'] ?? 0),
-        gastos: numero(fila.gastos ?? fila.Gastos ?? fila.K ?? 0),
-        recaudado: numero(fila.recaudado ?? fila.Recaudado ?? fila.L ?? 0),
-        diferencia: numero(fila.diferencia ?? fila.Diferencia ?? fila.M ?? 0),
+        playero1: (p1 === '0' || p1 === '') ? '—' : p1,
+        playero2: (p2 === '0' || p2 === '') ? '—' : p2,
         cafes: numero(fila.cafes ?? fila.Facturas ?? fila['Cafés'] ?? fila.N ?? 0),
         facturas: numero(fila.facturas ?? fila.O ?? 0),
         sandwiches: numero(fila.sandwiches ?? fila['Sándwiches'] ?? fila.P ?? 0),
@@ -681,9 +525,6 @@
       };
     }
 
-    /********************************************************
-     * CONTROL DE VISTAS Y RENDERS
-     ********************************************************/
     function actualizarMesesDisponibles() {
       const meses = new Set();
       todosLosRegistros.forEach(r => {
@@ -736,176 +577,9 @@
       document.getElementById('info-banner').querySelector('span').innerText = 
         `Mostrando: ${tituloMes} | ${diasAuditados} días cerrados auditados (${registrosMostrar.length} turnos procesados)`;
 
-      procesarVentasGenerales(registrosMostrar);
       procesarUnidadesSelect(registrosMostrar);
     }
 
-    /********************************************************
-     * PROCESAMIENTO DE VENTAS Y KPIS
-     ********************************************************/
-    function procesarVentasGenerales(registros) {
-      if (!registros.length) {
-        document.getElementById('kpi-proy-venta').innerText = formatoMoneda(0);
-        document.getElementById('kpi-acum-venta').innerText = formatoMoneda(0);
-        document.getElementById('kpi-prom-venta').innerText = formatoMoneda(0);
-        return;
-      }
-
-      let ventaTotal = 0, shellBox = 0, tarjetas = 0, ctasCtes = 0, mercadoPago = 0;
-
-      registros.forEach(fila => {
-        ventaTotal += fila.ventaTotal;
-        shellBox += fila.shellBox;
-        tarjetas += fila.tarjetas;
-        ctasCtes += fila.ctasCtes;
-        mercadoPago += fila.mercadoPago;
-      });
-
-      const fechasUnicas = new Set(registros.map(r => formatoFecha(r.fecha)));
-      const diasRegistrados = fechasUnicas.size || 1;
-
-      const refFecha = registros[0].fecha;
-      const diasDelMes = new Date(refFecha.getFullYear(), refFecha.getMonth() + 1, 0).getDate();
-
-      const promedioDiario = ventaTotal / diasRegistrados;
-      const proyeccionVenta = modoVista === 'curso' ? (promedioDiario * diasDelMes) : ventaTotal;
-
-      document.getElementById('kpi-proy-venta').innerText = formatoMoneda(proyeccionVenta);
-      document.getElementById('kpi-acum-venta').innerText = formatoMoneda(ventaTotal);
-      document.getElementById('kpi-prom-venta').innerText = formatoMoneda(promedioDiario);
-
-      document.getElementById('kpi-shellbox').innerText = formatoMoneda(shellBox);
-      document.getElementById('kpi-tarjetas').innerText = formatoMoneda(tarjetas);
-      document.getElementById('kpi-ctas').innerText = formatoMoneda(ctasCtes);
-      document.getElementById('kpi-mp').innerText = formatoMoneda(mercadoPago);
-
-      procesarGraficoVentas(registros);
-      procesarRankingShellBox(registros);
-    }
-
-    /********************************************************
-     * GRÁFICO DE VENTAS
-     ********************************************************/
-    function procesarGraficoVentas(registros) {
-      const ventasPorFecha = {};
-
-      registros.forEach(fila => {
-        const fechaStr = formatoFecha(fila.fecha);
-        ventasPorFecha[fechaStr] = (ventasPorFecha[fechaStr] || 0) + fila.ventaTotal;
-      });
-
-      const ordenadas = Object.entries(ventasPorFecha).sort((a, b) => obtenerFecha(a[0]) - obtenerFecha(b[0]));
-      const labels = ordenadas.map(x => x[0]);
-      const valores = ordenadas.map(x => x[1]);
-
-      document.getElementById('chart-title').innerText = 
-        `EVOLUCIÓN DE VENTAS DIARIAS (${modoVista === 'curso' ? 'MES EN CURSO - DÍAS CERRADOS' : 'HISTÓRICO'})`;
-
-      actualizarGrafico(labels, valores);
-    }
-
-    function actualizarGrafico(labels, data) {
-      const canvas = document.getElementById('chartVentas');
-      if (!canvas) return;
-
-      const ctx = canvas.getContext('2d');
-      if (chartVentasInstance) chartVentasInstance.destroy();
-
-      chartVentasInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: data,
-            borderColor: '#ff9900',
-            backgroundColor: 'rgba(255,153,0,0.15)',
-            borderWidth: 2,
-            pointRadius: 4,
-            tension: 0.3,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: {
-              grid: { color: '#1a2333' },
-              ticks: { color: '#8a99ad', font: { size: 10 } }
-            },
-            y: {
-              grid: { color: '#1a2333' },
-              ticks: {
-                color: '#8a99ad',
-                callback: (v) => '$ ' + Number(v).toLocaleString('es-AR')
-              },
-              min: 0
-            }
-          }
-        }
-      });
-    }
-
-    /********************************************************
-     * RANKING SHELL BOX
-     ********************************************************/
-    function procesarRankingShellBox(registros) {
-      const ranking = {};
-
-      registros.forEach(fila => {
-        const cajeros = [];
-        if (fila.playero1) cajeros.push({ nombre: fila.playero1.trim(), turno: fila.turno });
-        if (fila.playero2) cajeros.push({ nombre: fila.playero2.trim(), turno: fila.turno });
-
-        if (!cajeros.length) return;
-        const valorPorCajero = fila.shellBox / cajeros.length;
-
-        cajeros.forEach(c => {
-          if (!ranking[c.nombre]) {
-            ranking[c.nombre] = { total: 0, dias: new Set(), manana: 0, tarde: 0 };
-          }
-          ranking[c.nombre].total += valorPorCajero;
-          ranking[c.nombre].dias.add(formatoFecha(fila.fecha));
-
-          const t = String(c.turno || '').toLowerCase();
-          if (t.includes('mañana') || t.includes('manana')) ranking[c.nombre].manana++;
-          else if (t.includes('tarde')) ranking[c.nombre].tarde++;
-        });
-      });
-
-      const lista = Object.entries(ranking)
-        .map(([nombre, d]) => ({
-          nombre,
-          total: d.total,
-          dias: d.dias.size,
-          manana: d.manana,
-          tarde: d.tarde
-        }))
-        .sort((a, b) => b.total - a.total);
-
-      const contenedor = document.getElementById('ranking-shellbox');
-      contenedor.innerHTML = '';
-
-      lista.forEach((item, idx) => {
-        const promedio = item.total / (item.dias || 1);
-        const div = document.createElement('div');
-        div.className = 'ranking-row';
-        div.innerHTML = `
-          <div class="ranking-user">
-            <span class="ranking-num">${idx + 1}.</span>
-            <span class="ranking-name">${item.nombre}</span>
-            <span class="ranking-metrics">(M: ${item.manana} / T: ${item.tarde} | Prom: ${formatoMoneda(promedio)}/día)</span>
-          </div>
-          <span class="ranking-val">${formatoMoneda(item.total)}</span>
-        `;
-        contenedor.appendChild(div);
-      });
-    }
-
-    /********************************************************
-     * UNIDADES SELECT Y TABLA CAJEROS (50/50)
-     ********************************************************/
     function procesarUnidadesSelect(registros) {
       const acumulados = { cafes: 0, facturas: 0, sandwiches: 0, promo39: 0, fastfood: 0 };
       const rankingCajeros = {};
@@ -922,8 +596,8 @@
         tr.innerHTML = `
           <td>${formatoFecha(fila.fecha)}</td>
           <td><span class="badge-turno">${fila.turno || '—'}</span></td>
-          <td><b>${fila.playero1 || '—'}</b></td>
-          <td>${fila.playero2 || '—'}</td>
+          <td><b>${fila.playero1}</b></td>
+          <td>${fila.playero2}</td>
           <td>${formatoNumero(c)}</td>
           <td>${formatoNumero(fac)}</td>
           <td>${formatoNumero(s)}</td>
@@ -939,8 +613,8 @@
         acumulados.fastfood += ff;
 
         const cajeros = [];
-        if (fila.playero1 && fila.playero1 !== '—') cajeros.push(fila.playero1.trim());
-        if (fila.playero2 && fila.playero2 !== '—') cajeros.push(fila.playero2.trim());
+        if (fila.playero1 && fila.playero1 !== '—') cajeros.push(fila.playero1);
+        if (fila.playero2 && fila.playero2 !== '—') cajeros.push(fila.playero2);
 
         if (cajeros.length > 0) {
           const factor = 1 / cajeros.length;
