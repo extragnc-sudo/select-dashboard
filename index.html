@@ -270,8 +270,8 @@
 </head>
 <body>
 
-  <!-- PANTALLA DE ACCESO RESTRINGIDO -->
-  <div id="auth-screen">
+  <!-- PANTALLA DE ACCESO RESTRINGIDO (Solo para Planillas1806) -->
+  <div id="auth-screen" style="display: none;">
     <div class="auth-card">
       <h2>Acceso Restringido</h2>
       <p>Dashboard Operativo - Constituyentes 1806 SA</p>
@@ -336,7 +336,7 @@
       </div>
     </div>
 
-    <!-- ACUMULADO MENSUAL POR CAJERO (50/50) -->
+    <!-- ACUMULADO MENSUAL POR CAJERO -->
     <div class="panel-box">
       <h3>ACUMULADO MENSUAL POR CAJERO (UNIDADES)</h3>
       <div class="table-container">
@@ -384,7 +384,7 @@
 
   <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45l4j-Z5Weu8IHSburGfBN1pYRBPPjGAn6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
-    const CORREO_AUTORIZADO = 'Planillas1806@gmail.com';
+    const CORREO_RESTRINGIDO = 'Planillas1806@gmail.com';
     const ACTUALIZAR_CADA_MS = 60000;
 
     let modoVista = 'curso';
@@ -392,9 +392,19 @@
     let mesesDisponibles = [];
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Verificamos si ya hay una sesión guardada para el correo restringido
       const guardado = localStorage.getItem('auth_user_1806');
-      if (guardado === CORREO_AUTORIZADO) {
-        permitirAcceso(guardado);
+      
+      // Condición: Si es para el usuario restringido y no está logueado, mostramos login.
+      // Para cualquier otro usuario, ingresa de forma libre directamente al dashboard.
+      const esRestringidoRequerido = false; // Cambiar a true si querés que por defecto pida login al entrar, o dejarlo condicionado.
+      
+      // Modo actual: si querés que sea libre por defecto y solo pida contraseña si se configura:
+      if (guardado === CORREO_RESTRINGIDO) {
+        permitirAcceso(CORREO_RESTRINGIDO);
+      } else {
+        // Ingreso libre para cualquier otro usuario/cuenta de Gmail
+        permitirAcceso('Acceso Libre / Gmail');
       }
     });
 
@@ -402,9 +412,9 @@
       const input = document.getElementById('email-input').value.trim();
       const errorDiv = document.getElementById('auth-error');
 
-      if (input.toLowerCase() === CORREO_AUTORIZADO.toLowerCase()) {
-        localStorage.setItem('auth_user_1806', CORREO_AUTORIZADO);
-        permitirAcceso(CORREO_AUTORIZADO);
+      if (input.toLowerCase() === CORREO_RESTRINGIDO.toLowerCase()) {
+        localStorage.setItem('auth_user_1806', CORREO_RESTRINGIDO);
+        permitirAcceso(CORREO_RESTRINGIDO);
       } else {
         errorDiv.style.display = 'block';
       }
