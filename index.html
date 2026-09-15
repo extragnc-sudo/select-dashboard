@@ -242,6 +242,12 @@
       font-size: 0.75rem;
       font-weight: 700;
     }
+
+    /* CONTROL DE ACCESO VISUAL POR ROL */
+    .admin-only { display: block; }
+    body.role-operativo .admin-only { display: none !important; }
+    body.role-operativo .main-grid { grid-template-columns: 1fr; }
+    body.role-operativo .chart-panel { display: none !important; }
   </style>
 </head>
 <body>
@@ -266,8 +272,8 @@
       Mostrando: Cargando información a día cerrado...
     </div>
 
-    <!-- KPIS MONETARIOS -->
-    <div class="kpi-grid">
+    <!-- KPIS MONETARIOS - SOLO ADMINISTRACION -->
+    <div class="kpi-grid admin-only">
       <div class="kpi-card">
         <div class="kpi-card-title">PROYECCIÓN VENTA MES</div>
         <div class="kpi-card-value val-orange" id="kpi-proy-venta">$ 0</div>
@@ -301,7 +307,7 @@
 
     <!-- GRÁFICO + RANKING SHELL BOX -->
     <div class="main-grid">
-      <div class="panel-box">
+      <div class="panel-box chart-panel admin-only">
         <h3 id="chart-title">EVOLUCIÓN DE VENTAS DIARIAS (DÍAS CERRADOS)</h3>
         <div style="height: 300px; width: 100%;">
           <canvas id="chartVentas"></canvas>
@@ -399,14 +405,16 @@
     /********************************************************
      * CONFIGURACIÓN & VARIABLES
      ********************************************************/
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45l4j-Z5Weu8IHSburGfBN1pYRBPPjGAn6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
     const ACTUALIZAR_CADA_MS = 60000;
+    const EMAIL_VISTA_OPERATIVA = 'planillas1806@gmail.com';
 
     let chartVentasInstance = null;
     let modoVista = 'curso';
     let todosLosRegistros = [];
     let mesesDisponibles = [];
     let mesHistoricoSeleccionado = '';
+    let rolUsuario = 'ADMIN';
+    let datosCargados = false;
 
     /********************************************************
      * INICIALIZACIÓN
@@ -498,32 +506,35 @@
      ********************************************************/
     async function cargarDatos() {
       try {
-        const respuesta = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), {
-          method: 'GET',
-          redirect: 'follow'
+        const respuesta = await new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .obtenerDatosDashboard();
         });
 
-        if (!respuesta.ok) throw new Error('Error HTTP: ' + respuesta.status);
+        if (!respuesta || respuesta.ok !== true) {
+          throw new Error((respuesta && respuesta.error) || 'No se pudieron obtener los datos.');
+        }
 
-        const json = await respuesta.json();
-        let registros = Array.isArray(json) ? json : (json.registros || json.data || json.datos || []);
+        rolUsuario = String(respuesta.rol || 'ADMIN').toUpperCase();
+        document.body.classList.toggle('role-operativo', rolUsuario === 'OPERATIVO');
 
-        // Filtrar y normalizar
+        let registros = Array.isArray(respuesta.registros) ? respuesta.registros : [];
         todosLosRegistros = registros
           .map(normalizarRegistro)
           .filter(r => r !== null);
 
-        if (todosLosRegistros.length === 0) {
-          document.getElementById('info-banner').innerText = 'No se encontraron registros de días cerrados.';
-          return;
-        }
+        datosCargados = true;
 
         actualizarMesesDisponibles();
         renderizarVistaActual();
 
       } catch (error) {
         console.error('Error al cargar datos:', error);
-        document.getElementById('info-banner').innerText = 'Error al conectar con los datos';
+        datosCargados = false;
+        document.getElementById('info-banner').innerText =
+          'No fue posible validar el usuario o conectar con los datos. Verifique que haya iniciado sesión con Google y que el Web App esté restringido a usuarios autenticados.';
       }
     }
 
@@ -534,12 +545,10 @@
       // REGLA CRÍTICA: FILTRAR HASTA EL DÍA ANTERIOR (DÍA CERRADO)
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
-      
+
       const fechaEval = new Date(fechaObj.getTime());
       fechaEval.setHours(0, 0, 0, 0);
 
-      // Si la fecha es igual o posterior a hoy, o no tiene venta registrada, se descarta
-      const vtaTotal = numero(fila.ventaTotal ?? fila['Venta Total'] ?? fila.F ?? 0);
       if (fechaEval >= hoy) return null;
 
       return {
@@ -548,7 +557,8 @@
         turno: fila.turno ?? fila.Turno ?? fila.C ?? '',
         playero1: fila.cajero1 ?? fila.Cajero1 ?? fila.playero1 ?? fila.D ?? '',
         playero2: fila.cajero2 ?? fila.Cajero2 ?? fila.playero2 ?? fila.E ?? '',
-        ventaTotal: vtaTotal,
+        // Los campos monetarios administrativos solo llegan al navegador para ADMIN.
+        ventaTotal: numero(fila.ventaTotal ?? fila['Venta Total'] ?? fila.F ?? 0),
         shellBox: numero(fila.shellBox ?? fila['Shell Box'] ?? fila.G ?? 0),
         mercadoPago: numero(fila.mercadoPago ?? fila['Mercado Pago'] ?? fila.H ?? 0),
         ctasCtes: numero(fila.ctasCtes ?? fila['Ctas/Ctes'] ?? fila.I ?? 0),
@@ -618,10 +628,23 @@
      * PROCESAMIENTO VENTAS & KPIS MONETARIOS
      ********************************************************/
     function procesarVentasGenerales(registros) {
+      // La vista OPERATIVA nunca procesa ni muestra las métricas
+      // administrativas de venta total, tarjetas, Ctas/Ctes y Mercado Pago.
+      if (rolUsuario === 'OPERATIVO') {
+        procesarRankingShellBox(registros);
+        return;
+      }
+
       if (!registros.length) {
         document.getElementById('kpi-proy-venta').innerText = formatoMoneda(0);
         document.getElementById('kpi-acum-venta').innerText = formatoMoneda(0);
         document.getElementById('kpi-prom-venta').innerText = formatoMoneda(0);
+        document.getElementById('kpi-shellbox').innerText = formatoMoneda(0);
+        document.getElementById('kpi-tarjetas').innerText = formatoMoneda(0);
+        document.getElementById('kpi-ctas').innerText = formatoMoneda(0);
+        document.getElementById('kpi-mp').innerText = formatoMoneda(0);
+        if (chartVentasInstance) { chartVentasInstance.destroy(); chartVentasInstance = null; }
+        procesarRankingShellBox(registros);
         return;
       }
 
@@ -637,18 +660,14 @@
 
       const fechasUnicas = new Set(registros.map(r => formatoFecha(r.fecha)));
       const diasRegistrados = fechasUnicas.size || 1;
-
-      // Obtener días totales del mes consultado
       const refFecha = registros[0].fecha;
       const diasDelMes = new Date(refFecha.getFullYear(), refFecha.getMonth() + 1, 0).getDate();
-
       const promedioDiario = ventaTotal / diasRegistrados;
       const proyeccionVenta = modoVista === 'curso' ? (promedioDiario * diasDelMes) : ventaTotal;
 
       document.getElementById('kpi-proy-venta').innerText = formatoMoneda(proyeccionVenta);
       document.getElementById('kpi-acum-venta').innerText = formatoMoneda(ventaTotal);
       document.getElementById('kpi-prom-venta').innerText = formatoMoneda(promedioDiario);
-
       document.getElementById('kpi-shellbox').innerText = formatoMoneda(shellBox);
       document.getElementById('kpi-tarjetas').innerText = formatoMoneda(tarjetas);
       document.getElementById('kpi-ctas').innerText = formatoMoneda(ctasCtes);
