@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DASHBOARD - SELECT</title>
+  <title>DASHBOARD - SELECT (Constituyentes 1806)</title>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -17,6 +17,7 @@
       --accent-blue: #3b82f6;
       --accent-cyan: #38bdf8;
       --badge-bg: #1e293b;
+      --danger: #ef4444;
     }
 
     * {
@@ -31,9 +32,78 @@
       padding: 24px;
     }
 
+    /* PANTALLA DE BLOQUEO / LOGIN */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 80vh;
+      text-align: center;
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      padding: 32px;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    .auth-card h2 {
+      margin-top: 0;
+      color: var(--accent-orange);
+      font-size: 1.5rem;
+    }
+
+    .auth-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-main);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-main);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent-orange);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: opacity 0.2s;
+    }
+
+    .auth-btn:hover {
+      opacity: 0.9;
+    }
+
+    .auth-error {
+      color: var(--danger);
+      font-size: 0.8rem;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* CONTENEDOR PRINCIPAL (OCULTO HASTA VALIDAR) */
     .container {
       max-width: 1400px;
       margin: 0 auto;
+      display: none;
     }
 
     /* HEADER */
@@ -48,7 +118,6 @@
       font-size: 1.4rem;
       font-weight: 800;
       margin: 0;
-      letter-spacing: 0.5px;
       color: #ffffff;
     }
 
@@ -93,6 +162,9 @@
       font-size: 0.85rem;
       color: var(--text-muted);
       margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     /* GRID KPIS MONETARIOS */
@@ -167,6 +239,8 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+      max-height: 260px;
+      overflow-y: auto;
     }
 
     .ranking-row {
@@ -205,6 +279,7 @@
     /* TABLAS */
     .table-container {
       overflow-x: auto;
+      max-height: 350px;
     }
 
     table {
@@ -222,6 +297,9 @@
       padding: 10px 12px;
       border-bottom: 1px solid var(--bg-card-border);
       text-transform: uppercase;
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
     }
 
     td {
@@ -242,11 +320,28 @@
       font-size: 0.75rem;
       font-weight: 700;
     }
+
+    @media (max-width: 1024px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .main-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <!-- PANTALLA DE ACCESO RESTRINGIDO -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <h2>Acceso Restringido</h2>
+      <p>Dashboard Administrativo - Constituyentes 1806 SA</p>
+      <input type="email" id="email-input" class="auth-input" placeholder="Ingrese correo autorizado..." />
+      <button class="auth-btn" onclick="validarAcceso()">Ingresar</button>
+      <div id="auth-error" class="auth-error">Acceso denegado. Correo no autorizado.</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PRINCIPAL -->
+  <div class="container" id="dashboard-container">
     
     <!-- HEADER -->
     <header>
@@ -255,15 +350,21 @@
         <p>Control de Ventas & Rendimiento de Tienda</p>
       </div>
 
-      <div class="nav-toggle">
-        <button class="btn-toggle active" id="btn-curso" onclick="cambiarVista('curso')">Mes en Curso</button>
-        <button class="btn-toggle" id="btn-historico" onclick="cambiarVista('historico')">Histórico</button>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <select id="select-mes-historico" style="display: none; background: #111622; color: #fff; border: 1px solid var(--bg-card-border); padding: 8px; border-radius: 6px;" onchange="renderizarVistaActual()">
+          <!-- Opciones de meses históricos -->
+        </select>
+        <div class="nav-toggle">
+          <button class="btn-toggle active" id="btn-curso" onclick="cambiarVista('curso')">Mes en Curso</button>
+          <button class="btn-toggle" id="btn-historico" onclick="cambiarVista('historico')">Histórico</button>
+        </div>
       </div>
     </header>
 
     <!-- BANNER INFORMATIVO -->
     <div class="info-bar" id="info-banner">
-      Mostrando: Cargando información a día cerrado...
+      <span>Mostrando: Cargando información a día cerrado...</span>
+      <span id="user-logged-info" style="font-size: 0.75rem; color: var(--accent-orange);"></span>
     </div>
 
     <!-- KPIS MONETARIOS -->
@@ -303,16 +404,14 @@
     <div class="main-grid">
       <div class="panel-box">
         <h3 id="chart-title">EVOLUCIÓN DE VENTAS DIARIAS (DÍAS CERRADOS)</h3>
-        <div style="height: 300px; width: 100%;">
+        <div style="height: 280px; width: 100%;">
           <canvas id="chartVentas"></canvas>
         </div>
       </div>
 
       <div class="panel-box">
         <h3 id="ranking-title">RANKING DEL MES (SHELL BOX X PERSONAL)</h3>
-        <div class="ranking-list" id="ranking-shellbox">
-          <!-- Filas de ranking dinámicas -->
-        </div>
+        <div class="ranking-list" id="ranking-shellbox"></div>
       </div>
     </div>
 
@@ -347,7 +446,7 @@
 
     <!-- ACUMULADO MENSUAL POR CAJERO (50/50) -->
     <div class="panel-box" style="margin-bottom: 20px;">
-      <h3 id="tabla-cajeros-title">ACUMULADO MENSUAL POR CAJERO (UNIDADES)</h3>
+      <h3>ACUMULADO MENSUAL POR CAJERO (UNIDADES)</h3>
       <div class="table-container">
         <table>
           <thead>
@@ -361,9 +460,7 @@
               <th>Total Unidades</th>
             </tr>
           </thead>
-          <tbody id="tbody-cajeros">
-            <!-- Filas cajeros -->
-          </tbody>
+          <tbody id="tbody-cajeros"></tbody>
         </table>
       </div>
     </div>
@@ -386,9 +483,7 @@
               <th>Fast Food</th>
             </tr>
           </thead>
-          <tbody id="tbody-jornadas">
-            <!-- Filas por día/turno -->
-          </tbody>
+          <tbody id="tbody-jornadas"></tbody>
         </table>
       </div>
     </div>
@@ -400,21 +495,45 @@
      * CONFIGURACIÓN & VARIABLES
      ********************************************************/
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy45l4j-Z5Weu8IHSburGfBN1pYRBPPjGAn6H7-v7H_xkznTshuZhrQT5SCpPdx_Zp/exec';
+    const CORREO_AUTORIZADO = 'Planillas1806@gmail.com';
     const ACTUALIZAR_CADA_MS = 60000;
 
     let chartVentasInstance = null;
     let modoVista = 'curso';
     let todosLosRegistros = [];
     let mesesDisponibles = [];
-    let mesHistoricoSeleccionado = '';
 
     /********************************************************
-     * INICIALIZACIÓN
+     * SISTEMA DE VALIDACIÓN DE ACCESO
      ********************************************************/
     document.addEventListener('DOMContentLoaded', () => {
+      // Verificar si ya inició sesión en esta pestaña (localStorage)
+      const guardado = localStorage.getItem('auth_user_1806');
+      if (guardado === CORREO_AUTORIZADO) {
+        permitirAcceso(guardado);
+      }
+    });
+
+    function validarAcceso() {
+      const input = document.getElementById('email-input').value.trim();
+      const errorDiv = document.getElementById('auth-error');
+
+      if (input.toLowerCase() === CORREO_AUTORIZADO.toLowerCase()) {
+        localStorage.setItem('auth_user_1806', CORREO_AUTORIZADO);
+        permitirAcceso(CORREO_AUTORIZADO);
+      } else {
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    function permitirAcceso(email) {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('dashboard-container').style.display = 'block';
+      document.getElementById('user-logged-info').innerText = `Sesión: ${email}`;
+      
       cargarDatos();
       setInterval(cargarDatos, ACTUALIZAR_CADA_MS);
-    });
+    }
 
     /********************************************************
      * FORMATEADORES
@@ -494,7 +613,7 @@
     }
 
     /********************************************************
-     * CARGA Y NORMALIZACIÓN DE DATOS (DÍA CERRADO)
+     * CARGA Y NORMALIZACIÓN DE DATOS
      ********************************************************/
     async function cargarDatos() {
       try {
@@ -508,13 +627,12 @@
         const json = await respuesta.json();
         let registros = Array.isArray(json) ? json : (json.registros || json.data || json.datos || []);
 
-        // Filtrar y normalizar
         todosLosRegistros = registros
           .map(normalizarRegistro)
           .filter(r => r !== null);
 
         if (todosLosRegistros.length === 0) {
-          document.getElementById('info-banner').innerText = 'No se encontraron registros de días cerrados.';
+          document.getElementById('info-banner').querySelector('span').innerText = 'No se encontraron registros de días cerrados.';
           return;
         }
 
@@ -523,12 +641,13 @@
 
       } catch (error) {
         console.error('Error al cargar datos:', error);
-        document.getElementById('info-banner').innerText = 'Error al conectar con los datos';
+        document.getElementById('info-banner').querySelector('span').innerText = 'Error al conectar con los datos del servidor.';
       }
     }
 
     function normalizarRegistro(fila) {
-      const fechaObj = obtenerFecha(fila.fecha ?? fila.Fecha ?? fila.A);
+      // Soporta nombres de columnas de Apps Script (letras o nombres directos)
+      const fechaObj = obtenerFecha(fila.fecha ?? fila.Fecha ?? fila.A ?? fila['Fecha (c3)']);
       if (!fechaObj) return null;
 
       // REGLA CRÍTICA: FILTRAR HASTA EL DÍA ANTERIOR (DÍA CERRADO)
@@ -538,27 +657,25 @@
       const fechaEval = new Date(fechaObj.getTime());
       fechaEval.setHours(0, 0, 0, 0);
 
-      // Si la fecha es igual o posterior a hoy, o no tiene venta registrada, se descarta
-      const vtaTotal = numero(fila.ventaTotal ?? fila['Venta Total'] ?? fila.F ?? 0);
       if (fechaEval >= hoy) return null;
 
       return {
         fecha: fechaObj,
         planilla: fila.planilla ?? fila.Planilla ?? fila.B ?? '',
         turno: fila.turno ?? fila.Turno ?? fila.C ?? '',
-        playero1: fila.cajero1 ?? fila.Cajero1 ?? fila.playero1 ?? fila.D ?? '',
-        playero2: fila.cajero2 ?? fila.Cajero2 ?? fila.playero2 ?? fila.E ?? '',
-        ventaTotal: vtaTotal,
-        shellBox: numero(fila.shellBox ?? fila['Shell Box'] ?? fila.G ?? 0),
-        mercadoPago: numero(fila.mercadoPago ?? fila['Mercado Pago'] ?? fila.H ?? 0),
-        ctasCtes: numero(fila.ctasCtes ?? fila['Ctas/Ctes'] ?? fila.I ?? 0),
-        tarjetas: numero(fila.tarjetas ?? fila.Tarjetas ?? fila.J ?? 0),
+        playero1: fila.cajero1 ?? fila.Cajero1 ?? fila.playero1 ?? fila.D ?? fila['Cajero1(f3)'] ?? '',
+        playero2: fila.cajero2 ?? fila.Cajero2 ?? fila.playero2 ?? fila.E ?? fila['Cajero2(f4)'] ?? '',
+        ventaTotal: numero(fila.ventaTotal ?? fila['Venta Total'] ?? fila.F ?? fila['Vta Total (R11)'] ?? 0),
+        shellBox: numero(fila.shellBox ?? fila['Shell Box'] ?? fila.G ?? fila['Shell Box(R6)'] ?? 0),
+        mercadoPago: numero(fila.mercadoPago ?? fila['Mercado Pago'] ?? fila.H ?? fila['Mercado PAgo(R7)'] ?? 0),
+        ctasCtes: numero(fila.ctasCtes ?? fila['Ctas/Ctes'] ?? fila.I ?? fila['Ctas/ctes(R8)'] ?? 0),
+        tarjetas: numero(fila.tarjetas ?? fila.Tarjetas ?? fila.J ?? fila['Tarjetas(R9)'] ?? 0),
         gastos: numero(fila.gastos ?? fila.Gastos ?? fila.K ?? 0),
         recaudado: numero(fila.recaudado ?? fila.Recaudado ?? fila.L ?? 0),
         diferencia: numero(fila.diferencia ?? fila.Diferencia ?? fila.M ?? 0),
-        cafes: numero(fila.cafes ?? fila.Cafes ?? fila['Cafés'] ?? fila.N ?? 0),
-        facturas: numero(fila.facturas ?? fila.Facturas ?? fila.O ?? 0),
-        sandwiches: numero(fila.sandwiches ?? fila.Sandwiches ?? fila['Sándwiches'] ?? fila.P ?? 0),
+        cafes: numero(fila.cafes ?? fila.Facturas ?? fila['Cafés'] ?? fila.N ?? 0),
+        facturas: numero(fila.facturas ?? fila.O ?? 0),
+        sandwiches: numero(fila.sandwiches ?? fila['Sándwiches'] ?? fila.P ?? 0),
         promo39: numero(fila.promo39 ?? fila['Promo 39'] ?? fila.Q ?? 0),
         fastFood: numero(fila.fastFood ?? fila.fastfood ?? fila['Fast Food'] ?? fila.R ?? 0)
       };
@@ -574,12 +691,25 @@
         if (m) meses.add(m);
       });
       mesesDisponibles = Array.from(meses).sort().reverse();
+
+      const select = document.getElementById('select-mes-historico');
+      select.innerHTML = '';
+      mesesDisponibles.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.innerText = nombreMes(m);
+        select.appendChild(opt);
+      });
     }
 
     function cambiarVista(modo) {
       modoVista = modo;
       document.getElementById('btn-curso').classList.toggle('active', modo === 'curso');
       document.getElementById('btn-historico').classList.toggle('active', modo === 'historico');
+      
+      const select = document.getElementById('select-mes-historico');
+      select.style.display = modo === 'historico' ? 'inline-block' : 'none';
+
       renderizarVistaActual();
     }
 
@@ -596,18 +726,14 @@
         registrosMostrar = todosLosRegistros.filter(r => claveMes(r.fecha) === mesActualKey);
         tituloMes = nombreMes(mesActualKey);
       } else {
-        let mesesHistoricos = mesesDisponibles.filter(m => m !== mesActualKey);
-        if (!mesHistoricoSeleccionado) {
-          mesHistoricoSeleccionado = mesesHistoricos[0] || mesesDisponibles[0];
-        }
-        registrosMostrar = todosLosRegistros.filter(r => claveMes(r.fecha) === mesHistoricoSeleccionado);
-        tituloMes = nombreMes(mesHistoricoSeleccionado);
+        const mesSel = document.getElementById('select-mes-historico').value || mesesDisponibles[0];
+        registrosMostrar = todosLosRegistros.filter(r => claveMes(r.fecha) === mesSel);
+        tituloMes = nombreMes(mesSel);
       }
 
-      // Conteo real de días auditados
       const diasAuditados = new Set(registrosMostrar.map(r => formatoFecha(r.fecha))).size;
 
-      document.getElementById('info-banner').innerText = 
+      document.getElementById('info-banner').querySelector('span').innerText = 
         `Mostrando: ${tituloMes} | ${diasAuditados} días cerrados auditados (${registrosMostrar.length} turnos procesados)`;
 
       procesarVentasGenerales(registrosMostrar);
@@ -615,7 +741,7 @@
     }
 
     /********************************************************
-     * PROCESAMIENTO VENTAS & KPIS MONETARIOS
+     * PROCESAMIENTO DE VENTAS Y KPIS
      ********************************************************/
     function procesarVentasGenerales(registros) {
       if (!registros.length) {
@@ -638,7 +764,6 @@
       const fechasUnicas = new Set(registros.map(r => formatoFecha(r.fecha)));
       const diasRegistrados = fechasUnicas.size || 1;
 
-      // Obtener días totales del mes consultado
       const refFecha = registros[0].fecha;
       const diasDelMes = new Date(refFecha.getFullYear(), refFecha.getMonth() + 1, 0).getDate();
 
@@ -832,12 +957,10 @@
         }
       });
 
-      // Días registrados únicos
       const diasRegistrados = new Set(registros.map(r => formatoFecha(r.fecha))).size || 1;
       const refFecha = registros.length ? registros[0].fecha : new Date();
       const diasDelMes = new Date(refFecha.getFullYear(), refFecha.getMonth() + 1, 0).getDate();
 
-      // RENDER KPIS UNIDADES
       const renderKpiUnidad = (key, idProy, idAcum, idProm) => {
         const acum = acumulados[key];
         const prom = acum / diasRegistrados;
@@ -854,7 +977,6 @@
       renderKpiUnidad('promo39', 'kpi-promo39-proy', 'kpi-promo39-acum', 'kpi-promo39-prom');
       renderKpiUnidad('fastfood', 'kpi-fastfood-proy', 'kpi-fastfood-acum', 'kpi-fastfood-prom');
 
-      // RENDER TABLA CAJEROS (50/50)
       const tbodyCajeros = document.getElementById('tbody-cajeros');
       tbodyCajeros.innerHTML = '';
 
